@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/andela/ah-alpha.svg?branch=develop)](https://travis-ci.org/andela/ah-alpha)
+
 Authors Haven - A Social platform for the creative at heart.
 =======
 
