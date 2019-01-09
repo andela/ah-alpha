@@ -2,8 +2,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/andela/ah-alpha/badge.svg?branch=develop)](https://coveralls.io/github/andela/ah-alpha?branch=develop)
 [![Maintainability](https://api.codeclimate.com/v1/badges/71b6186964a8f797d66e/maintainability)](https://codeclimate.com/github/andela/ah-alpha/maintainability)
 
+
 Authors Haven - A Social platform for the creative at heart.
-=======
+
 
 ## Vision
 Create a community of like minded authors to foster inspiration and innovation
