@@ -1,10 +1,9 @@
-
-
-|[![Coverage Status](https://coveralls.io/repos/github/malep2007/ah-django/badge.svg)](https://coveralls.io/github/malep2007/ah-django)|[![Build Status](https://travis-ci.com/malep2007/ah-django.svg?branch=master)](https://travis-ci.com/malep2007/ah-django)|[![Maintainability](https://api.codeclimate.com/v1/badges/305eb85c9a29edd86669/maintainability)](https://codeclimate.com/github/malep2007/ah-django/maintainability)|[![Test Coverage](https://api.codeclimate.com/v1/badges/305eb85c9a29edd86669/test_coverage)](https://codeclimate.com/github/malep2007/ah-django/test_coverage)|
-|:---|:---|:---|:---|
+[![Build Status](https://travis-ci.org/andela/ah-alpha.svg?branch=develop)](https://travis-ci.org/andela/ah-alpha)
+[![Coverage Status](https://coveralls.io/repos/github/andela/ah-alpha/badge.svg?branch=develop)](https://coveralls.io/github/andela/ah-alpha?branch=develop)
+[![Maintainability](https://api.codeclimate.com/v1/badges/71b6186964a8f797d66e/maintainability)](https://codeclimate.com/github/andela/ah-alpha/maintainability)
 
 Authors Haven - A Social platform for the creative at heart.
-=======
+
 
 ## Vision
 Create a community of like minded authors to foster inspiration and innovation
