@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
-
+from .validations import UserValidation
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 from .models import User
@@ -15,6 +16,31 @@ class RegistrationSerializer(serializers.ModelSerializer):
         min_length=8,
         write_only=True
     )
+
+    def validate_username(self, value):
+        """
+        get the value of the username and check for validation
+        """
+        username = value
+        if(UserValidation.valid_username(self, username=username)):
+           return value
+    
+    def validate_email(self, value):
+        """
+        get the value of the email and check for validation during registration
+        """
+        email = value
+        if(UserValidation.valid_email(self, email=email)):
+           return value
+
+    def validate_password(self, value):
+        """
+        get the value of password and check for validation during registration
+        """
+        password = value
+        if(UserValidation.valid_password(self, password=password)):
+           return value
+
 
     # The client should not be able to send a token along with a registration
     # request. Making `token` read-only handles that for us.
@@ -69,7 +95,7 @@ class LoginSerializer(serializers.Serializer):
         # `authenticate` will return `None`. Raise an exception in this case.
         if user is None:
             raise serializers.ValidationError(
-                'A user with this email and password was not found.'
+                'Email and password did not match.'
             )
 
         # Django provides a flag on our `User` model called `is_active`. The
@@ -89,6 +115,14 @@ class LoginSerializer(serializers.Serializer):
             'username': user.username,
 
         }
+
+    def validate_email(self, value):
+        """
+        get email and check validation
+        """
+        email = value
+        if(UserValidation.valid_login_email(self, email=email)):
+           return value
 
 
 class UserSerializer(serializers.ModelSerializer):
