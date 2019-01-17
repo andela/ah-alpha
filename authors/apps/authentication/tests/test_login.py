@@ -27,28 +27,28 @@ class UserLoginTest(APITestCase):
             }
         }
         self.pwd_missing_special_char = {
-            "user":{
-                "email":"ewwachira254@gmail.com",
-                "password":"wachira254"
+            "user": {
+                "email": "ewwachira254@gmail.com",
+                "password": "wachira254"
             }
         }
         self.pwd_missing_caps = {
             "user": {
-                "email":"ewwachira254@gmail.com",
-                "password":"@wachira254"
+                "email": "ewwachira254@gmail.com",
+                "password": "@wachira254"
             }
         }
 
         self.pwd_missing_number = {
             "user": {
-                "email":"ewwachira254@gmail.com",
-                "password":"@wachiratesh"
+                "email": "ewwachira254@gmail.com",
+                "password": "@wachiratesh"
             }
         }
         self.short_pwd = {
             "user": {
-                "email":"ewwachira254@gmail.com",
-                "password":"@Wa254"
+                "email": "ewwachira254@gmail.com",
+                "password": "@Wa254"
             }
         }
 
@@ -87,15 +87,15 @@ class UserLoginTest(APITestCase):
     def test_caps(self):
         """Test for capital letter in password"""
         self.client.post(
-                self.registration_uri,
-                self.valid_user_credentials,
-                format="json"
+            self.registration_uri,
+            self.valid_user_credentials,
+            format="json"
         )
 
         response = self.client.post(
-                self.login_uri,
-                self.pwd_missing_caps,
-                format="json"
+            self.login_uri,
+            self.pwd_missing_caps,
+            format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertNotIn("token", response.data)
@@ -103,15 +103,15 @@ class UserLoginTest(APITestCase):
     def test_number(self):
         """Test atleast a number in password"""
         self.client.post(
-                self.registration_uri,
-                self.valid_user_credentials,
-                format="json"
+            self.registration_uri,
+            self.valid_user_credentials,
+            format="json"
         )
 
         response = self.client.post(
-                self.login_uri,
-                self.pwd_missing_number,
-                format="json"
+            self.login_uri,
+            self.pwd_missing_number,
+            format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertNotIn("token", response.data)
@@ -119,15 +119,15 @@ class UserLoginTest(APITestCase):
     def test_length(self):
         """Test for atleast 8 characteer password"""
         self.client.post(
-                self.registration_uri,
-                self.valid_user_credentials,
-                format="json"
+            self.registration_uri,
+            self.valid_user_credentials,
+            format="json"
         )
 
         response = self.client.post(
-                self.login_uri,
-                self.short_pwd,
-                format="json"
+            self.login_uri,
+            self.short_pwd,
+            format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertNotIn("token", response.data)

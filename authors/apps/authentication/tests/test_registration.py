@@ -9,7 +9,7 @@ from rest_framework.views import status
 
 class UserRegistrationTest(APITestCase):
     """
-            Holds all user registration
+        Holds all user registration
     """
 
     def setUp(self):

@@ -1,6 +1,7 @@
 error_msg = {
     "usedemail":"Email has already been used",
     "email_format":"Please input a valid email.",
+    "no_email":"Please provide an email",
     "usedname":"Username has already been taken",
     "shortname":"Username must have at least three characters",
     "no_letter":"Username should have a letter.",
@@ -20,5 +21,5 @@ error_msg = {
 success_msg={
     "confirmed_email":"Email succesfully confirmed",
     "pwd_changed":"Your password was successfully changed",
-    "request_success":"Request for password reset was succesful"
+    "request_success":"Request successful,  a link has been sent to your email"
 }

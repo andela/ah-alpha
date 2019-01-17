@@ -1,5 +1,4 @@
 import re
-
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
@@ -38,7 +37,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         """
         email = value
         if(UserValidation.valid_email(self, email=email)):
-           return value
+            return value
 
     def validate_password(self, value):
         """
@@ -46,8 +45,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         """
         password = value
         if(UserValidation.valid_password(self, password=password)):
-           return value
-
+            return value
 
 
    
@@ -139,7 +137,7 @@ class LoginSerializer(serializers.Serializer):
         """
         email = value
         if(UserValidation.valid_login_email(self, email=email)):
-           return value
+            return value
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -167,7 +165,6 @@ class UserSerializer(serializers.ModelSerializer):
         # `max_length` properties too, but that isn't the case for the token
         # field.
 
-
     def update(self, instance, validated_data):
         """Performs an update on a User."""
 
@@ -194,3 +191,12 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    """Handles serialization and deserialization of the email"""
+    email = serializers.EmailField()
+
+    class Meta:
+        model = User
+        fields = ('email')
