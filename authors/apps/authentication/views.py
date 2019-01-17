@@ -9,7 +9,6 @@ from .serializers import (
     LoginSerializer, RegistrationSerializer, UserSerializer
 )
 
-
 class RegistrationAPIView(GenericAPIView):
     # Allow any user (authenticated or not) to hit this endpoint.
     permission_classes = (AllowAny,)
@@ -72,4 +71,3 @@ class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-

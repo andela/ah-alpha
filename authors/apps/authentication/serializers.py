@@ -1,10 +1,13 @@
 import re
+
 from django.contrib.auth import authenticate
-from .validations import UserValidation
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
+# Local imports
+from .backends import JWTokens
 from .models import User
+from .validations import UserValidation
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -17,6 +20,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
         min_length=8,
         write_only=True
     )
+    # The client should not be able to send a token along with a registration
+    # request. Making `token` read-only handles that for us.
+    token = serializers.CharField(read_only=True)
 
     def validate_username(self, value):
         """
@@ -25,7 +31,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         username = value
         if(UserValidation.valid_username(self, username=username)):
            return value
-    
+
     def validate_email(self, value):
         """
         get the value of the email and check for validation during registration
@@ -43,14 +49,15 @@ class RegistrationSerializer(serializers.ModelSerializer):
            return value
 
 
-    # The client should not be able to send a token along with a registration
-    # request. Making `token` read-only handles that for us.
 
+   
     class Meta:
         model = User
         # List all of the fields that could possibly be included in a request
         # or response, including fields specified explicitly above.
-        fields = ['email', 'username', 'password']
+        fields = ['email', 'username', 'password', 'token']
+
+
 
     def create(self, validated_data):
         # Use the `create_user` method we wrote earlier to create a new user.
@@ -60,8 +67,12 @@ class RegistrationSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.CharField(max_length=255)
     username = serializers.CharField(max_length=255, read_only=True)
+    # The password should never be returned to the user as part of the response
+    # Making `password` write-only handles that for us.
     password = serializers.CharField(max_length=128, write_only=True)
-
+    # The client should not be able to send a token along with a login
+    # request. Making `token` read-only handles that for us.
+    token = serializers.CharField(read_only=True)
 
     def validate(self, data):
         # The `validate` method is where we make sure that the current
@@ -111,9 +122,14 @@ class LoginSerializer(serializers.Serializer):
         # The `validate` method should return a dictionary of validated data.
         # This is the data that is passed to the `create` and `update` methods
         # that we will see later on.
+
+        # We can now create a user token
+        token = JWTokens.create_token(self, user)
+
         return {
             'email': user.email,
             'username': user.username,
+            'token': token
 
         }
 
@@ -127,54 +143,54 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-	"""Handles serialization and deserialization of User objects."""
+    """Handles serialization and deserialization of User objects."""
 
-	# Passwords must be at least 8 characters, but no more than 128 
-	# characters. These values are the default provided by Django. We could
-	# change them, but that would create extra work while introducing no real
-	# benefit, so let's just stick with the defaults.
-	password = serializers.CharField(
-		max_length=128,
-		min_length=8,
-		write_only=True
-	)
+    # Passwords must be at least 8 characters, but no more than 128
+    # characters. These values are the default provided by Django. We could
+    # change them, but that would create extra work while introducing no real
+    # benefit, so let's just stick with the defaults.
+    password = serializers.CharField(
+        max_length=128,
+        min_length=8,
+        write_only=True
+    )
 
-	class Meta:
-		model = User
-		fields = ('email', 'username', 'password')
+    class Meta:
+        model = User
+        fields = ('email', 'username', 'password')
 
-		# The `read_only_fields` option is an alternative for explicitly
-		# specifying the field with `read_only=True` like we did for password
-		# above. The reason we want to use `read_only_fields` here is because
-		# we don't need to specify anything else about the field. For the
-		# password field, we needed to specify the `min_length` and 
-		# `max_length` properties too, but that isn't the case for the token
-		# field.
+        # The `read_only_fields` option is an alternative for explicitly
+        # specifying the field with `read_only=True` like we did for password
+        # above. The reason we want to use `read_only_fields` here is because
+        # we don't need to specify anything else about the field. For the
+        # password field, we needed to specify the `min_length` and
+        # `max_length` properties too, but that isn't the case for the token
+        # field.
 
 
-	def update(self, instance, validated_data):
-		"""Performs an update on a User."""
+    def update(self, instance, validated_data):
+        """Performs an update on a User."""
 
-		# Passwords should not be handled with `setattr`, unlike other fields.
-		# This is because Django provides a function that handles hashing and
-		# salting passwords, which is important for security. What that means
-		# here is that we need to remove the password field from the
-		# `validated_data` dictionary before iterating over it.
-		password = validated_data.pop('password', None)
+        # Passwords should not be handled with `setattr`, unlike other fields.
+        # This is because Django provides a function that handles hashing and
+        # salting passwords, which is important for security. What that means
+        # here is that we need to remove the password field from the
+        # `validated_data` dictionary before iterating over it.
+        password = validated_data.pop('password', None)
 
-		for (key, value) in validated_data.items():
-			# For the keys remaining in `validated_data`, we will set them on
-			# the current `User` instance one at a time.
-			setattr(instance, key, value)
+        for (key, value) in validated_data.items():
+            # For the keys remaining in `validated_data`, we will set them on
+            # the current `User` instance one at a time.
+            setattr(instance, key, value)
 
-		if password is not None:
-			# `.set_password()` is the method mentioned above. It handles all
-			# of the security stuff that we shouldn't be concerned with.
-			instance.set_password(password)
+        if password is not None:
+            # `.set_password()` is the method mentioned above. It handles all
+            # of the security stuff that we shouldn't be concerned with.
+            instance.set_password(password)
 
-		# Finally, after everything has been updated, we must explicitly save
-		# the model. It's worth pointing out that `.set_password()` does not
-		# save the model.
-		instance.save()
+        # Finally, after everything has been updated, we must explicitly save
+        # the model. It's worth pointing out that `.set_password()` does not
+        # save the model.
+        instance.save()
 
-		return instance
+        return instance
