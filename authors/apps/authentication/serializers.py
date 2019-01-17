@@ -29,7 +29,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         """
         username = value
         if(UserValidation.valid_username(self, username=username)):
-           return value
+            return value
 
     def validate_email(self, value):
         """
@@ -47,15 +47,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
         if(UserValidation.valid_password(self, password=password)):
             return value
 
-
-   
     class Meta:
         model = User
         # List all of the fields that could possibly be included in a request
         # or response, including fields specified explicitly above.
         fields = ['email', 'username', 'password', 'token']
-
-
 
     def create(self, validated_data):
         # Use the `create_user` method we wrote earlier to create a new user.
@@ -128,7 +124,6 @@ class LoginSerializer(serializers.Serializer):
             'email': user.email,
             'username': user.username,
             'token': token
-
         }
 
     def validate_email(self, value):

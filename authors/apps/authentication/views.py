@@ -53,7 +53,10 @@ class RegistrationAPIView(GenericAPIView):
                                      "link": link_url, "user_name": serializer.data.get("username")})
         send_mail(subject, "Verification mail", from_mail, [
                   to_mail], fail_silently=False, html_message=html_page)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({
+            "username": serializer.data['username'],
+            "email": serializer.data['email']
+        }, status=status.HTTP_201_CREATED)
 
 
 class LoginAPIView(GenericAPIView):
@@ -213,7 +216,7 @@ class ResetPasswordAPIView(UpdateAPIView):
         # get the password that the user is keying in
         password = request.data['user']['password']
 
-        
+
 
         # now we validate the password
         if len(password) < 8:

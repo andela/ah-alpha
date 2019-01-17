@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from .messages import error_msg
 from .models import User
 
+
 class UserValidation():
     """
     This is to validate user input on registration and login and return
@@ -32,9 +33,9 @@ class UserValidation():
             raise ValidationError(error_msg['usedname'])
         elif len(username) < 3:
             raise ValidationError(error_msg['shortname'])
-        elif re.search('[A-Za-z]',username) is None:
+        elif re.search('[A-Za-z]', username) is None:
             raise ValidationError(error_msg['no_letter'])
-        elif re.match('[A-Za-z]|[0-9]',username) is None:
+        elif re.match('[A-Za-z]|[0-9]', username) is None:
             raise ValidationError(error_msg['special_character'])
         return True
 
@@ -46,9 +47,9 @@ class UserValidation():
             raise ValidationError(error_msg['short_pwd'])
         elif re.search('[0-9]',password) is None:
             raise ValidationError(error_msg['number_in_pwd'])
-        elif re.search('[a-z]',password) is None:
+        elif re.search('[a-z]', password) is None:
             raise ValidationError(error_msg['letter_in_pwd'])
-        elif re.search('[A-Z]',password) is None:
+        elif re.search('[A-Z]', password) is None:
             raise ValidationError(error_msg['caps_in_pwd'])
         return True
 
@@ -62,4 +63,3 @@ class UserValidation():
         elif not user_qs.exists():
             raise ValidationError(error_msg['unregistered_email'])
         return True
-

@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.contrib.auth.models import (
-        AbstractBaseUser, BaseUserManager, PermissionsMixin
+    AbstractBaseUser, BaseUserManager, PermissionsMixin
 )
-from django.db import models 
+from django.db import models
 from .backends import JWTokens
 
 
@@ -14,7 +14,7 @@ class UserManager(BaseUserManager):
   """
   Django requires that custom users define their own Manager class. By
   inheriting from `BaseUserManager`, we get a lot of the same code used by
-  Django to create a `User` for free. 
+  Django to create a `User` for free.
 
   All we have to do is override the `create_user` function which we will use
   to create `User` objects.
@@ -123,7 +123,3 @@ class User(AbstractBaseUser, PermissionsMixin):
         the user's real name, we return their username instead.
         """
         return self.username
-        """
-        This string is used when a `User` is printed in the console.
-        """
-        return self.email
