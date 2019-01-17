@@ -62,7 +62,7 @@ class UserLoginTest(APITestCase):
 
         response = self.client.post(
             self.login_uri,
-            self.valid_login_data,
+            data=self.valid_login_data,
             format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)

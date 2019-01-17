@@ -75,7 +75,6 @@ class UserRegistrationTest(APITestCase):
             format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn("token", response.data)
 
 
     def test_user_registration_lacking_field(self):
