@@ -2,10 +2,12 @@ from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 from rest_framework.views import status
 
+
 class UserLoginTest(APITestCase):
     """
             Holds test for handling login
     """
+
     def setUp(self):
         """Setup method"""
         self.client = APIClient()
@@ -14,14 +16,14 @@ class UserLoginTest(APITestCase):
         self.valid_user_credentials = {
             "user": {
                 "username":"Wachira",
-                "email":"ewwachira254@gmail.com",
+                "email":"ewachira254@gmail.com",
                 "password":"@Wachira254"
             }
         }
         self.valid_login_data = {
-            "user":{
-                "email":"ewwachira254@gmail.com",
-                "password":"@Wachira254"
+            "user": {
+                "email": "ewachira254@gmail.com",
+                "password": "@Wachira254"
             }
         }
         self.pwd_missing_special_char = {
@@ -64,6 +66,7 @@ class UserLoginTest(APITestCase):
             format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("token", response.data)
 
     def test_special_char(self):
         """check for special character in password"""
@@ -79,6 +82,8 @@ class UserLoginTest(APITestCase):
             format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn("token", response.data)
+
     def test_caps(self):
         """Test for capital letter in password"""
         self.client.post(
@@ -93,6 +98,8 @@ class UserLoginTest(APITestCase):
                 format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn("token", response.data)
+
     def test_number(self):
         """Test atleast a number in password"""
         self.client.post(
@@ -107,6 +114,8 @@ class UserLoginTest(APITestCase):
                 format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn("token", response.data)
+
     def test_length(self):
         """Test for atleast 8 characteer password"""
         self.client.post(
@@ -121,3 +130,4 @@ class UserLoginTest(APITestCase):
                 format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn("token", response.data)
