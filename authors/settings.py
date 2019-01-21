@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'rest_framework',
 
     'authors.apps.authentication',
+    'authors.apps.articles',
     'authors.apps.core',
     'cloudinary',
     'authors.apps.profiles',
@@ -197,6 +198,13 @@ JWT_AUTH = {
     'JWT_AUTH_HEADER_PREFIX': 'Bearer',
     'JWT_AUTH_COOKIE': None,
 
+}
+
+CLOUDINARY = {
+   'cloud_name': os.getenv('CLOUDINARY_NAME'),
+   'api_key': os.getenv('CLOUDINARY_KEY'),
+   'api_secret': os.getenv('CLOUDINARY_SECRET'),
+   'secure': True
 }
 
 # Activate Django-Heroku.
