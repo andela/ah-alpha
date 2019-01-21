@@ -11,56 +11,56 @@ from .backends import JWTokens
 
 
 class UserManager(BaseUserManager):
-  """
-  Django requires that custom users define their own Manager class. By
-  inheriting from `BaseUserManager`, we get a lot of the same code used by
-  Django to create a `User` for free.
-
-  All we have to do is override the `create_user` function which we will use
-  to create `User` objects.
-  """
-
-  def create_user(self, username, email, password=None):
-    """Create and return a `User` with an email, username and password."""
-    if username is None:
-      raise TypeError('Users must have a username.')
-
-    if email is None:
-      raise TypeError('Users must have an email address.')
-
-    user = self.model(username=username, email=self.normalize_email(email))
-    user.set_password(password)
-    user.save()
-    # We ain't saving the user token in our database
-    # We need it to be part of the response though
-    # This line below generates a user token with the saved user's details
-    user.token = JWTokens.create_token(self, user)
-
-    return user
-
-  def create_superuser(self, username, email, password):
     """
-    Create and return a `User` with superuser powers.
+    Django requires that custom users define their own Manager class. By
+    inheriting from `BaseUserManager`, we get a lot of the same code used by
+    Django to create a `User` for free.
 
-    Superuser powers means that this use is an admin that can do anything
-    they want.
+    All we have to do is override the `create_user` function which we will use
+    to create `User` objects.
     """
-    if password is None:
-      raise TypeError('Superusers must have a password.')
 
-    user = self.create_user(username, email, password)
-    user.is_superuser = True
-    user.is_staff = True
-    user.is_confirmed = True
-    user.save()
+    def create_user(self, username, email, password=None):
+        """Create and return a `User` with an email, username and password."""
+        if username is None:
+            raise TypeError('Users must have a username.')
 
-    return user
+        if email is None:
+            raise TypeError('Users must have an email address.')
+
+        user = self.model(username=username, email=self.normalize_email(email))
+        user.set_password(password)
+        user.save()
+        # We ain't saving the user token in our database
+        # We need it to be part of the response though
+        # This line below generates a user token with the saved user's details
+        user.token = JWTokens.create_token(self, user)
+
+        return user
+
+    def create_superuser(self, username, email, password):
+        """
+        Create and return a `User` with superuser powers.
+
+        Superuser powers means that this use is an admin that can do anything
+        they want.
+        """
+        if password is None:
+            raise TypeError('Superusers must have a password.')
+
+        user = self.create_user(username, email, password)
+        user.is_superuser = True
+        user.is_staff = True
+        user.is_confirmed = True
+        user.save()
+
+        return user
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    # Each `User` needs a human-readable unique identifier that we can use to
-    # represent the `User` in the UI. We want to index this column in the
-    # database to improve lookup performance.
+        # Each `User` needs a human-readable unique identifier that we can use
+        # to represent the `User` in the UI. We want to index this column in
+        # the database to improve lookup performance.
     username = models.CharField(db_index=True, max_length=255, unique=True)
 
     # We also need a way to contact the user and a way for the user to identify

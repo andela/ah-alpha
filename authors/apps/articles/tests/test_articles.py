@@ -5,12 +5,10 @@ from django.template.defaultfilters import slugify
 from ..models import Article
 from ...authentication.models import User
 
-
 class ArticleTestCase(APITestCase):
     """
         Article endpoints test
     """
-
     def setUp(self):
         """
             Setup method

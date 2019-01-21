@@ -51,13 +51,13 @@ INSTALLED_APPS = [
     'django_extensions',
     'rest_framework',
     'taggit',
-
-    'authors.apps.authentication',
-    'authors.apps.articles',
+    'cloudinary',
 
     'authors.apps.like_dislike',
+    'authors.apps.authentication',
+    'authors.apps.articles',
+    'authors.apps.rating',
     'authors.apps.core',
-    'cloudinary',
     'authors.apps.profiles',
     'rest_framework_swagger',
     # credits --> https://github.com/axnsan12/drf-yasg

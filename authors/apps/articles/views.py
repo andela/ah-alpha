@@ -21,6 +21,7 @@ class ArticleAPIView(generics.ListCreateAPIView):
     """
         Article endpoints
     """
+    renderer_classes = (ArticleJSONRenderer,)
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
 
@@ -125,7 +126,8 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
             article.description = article_data['description']
             article.body = article_data['body']
             serializer = ArticleSerializer(
-                instance=article, data=article_data, context={'request': request}, partial=True
+                instance=article, data=article_data,
+                context={'request': request}, partial=True
             )
             if serializer.is_valid():
                 serializer.save(author=request.user)

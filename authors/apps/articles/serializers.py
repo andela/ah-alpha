@@ -10,6 +10,10 @@ from django.contrib.contenttypes.models import ContentType
 from ..authentication.serializers import RegistrationSerializer
 from .messages import error_msgs
 from .models import Article
+from ..authentication.serializers import RegistrationSerializer
+from .messages import error_msgs
+from ..rating.models import Rating
+from django.db.models import Avg
 
 
 class ArticleSerializer(serializers.ModelSerializer):
@@ -23,6 +27,7 @@ class ArticleSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField(read_only=True)
     dislike_count = serializers.SerializerMethodField(read_only=True)
     like_status = serializers.SerializerMethodField(read_only=True)
+    rating = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Article
@@ -64,3 +69,19 @@ class ArticleSerializer(serializers.ModelSerializer):
         except Exception as e:
             if e.__class__.__name__ == "DoesNotExist":
                 return statusmessage['Null']
+
+        slug = unique_slug
+        return slug
+
+    def get_rating(self, obj):
+        """
+            Get article rating.
+        """
+        average = Rating.objects.filter(
+            article__pk=obj.pk).aggregate(Avg('your_rating'))
+
+        if average['your_rating__avg'] is None:
+            average_rating = 0
+            return average_rating
+
+        return average['your_rating__avg']
