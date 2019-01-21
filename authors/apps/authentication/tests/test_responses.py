@@ -90,8 +90,8 @@ class UserRegistrationTest(APITestCase):
         )
         data = response.data
         self.assertTrue(data['errors']['username'])
-    
-    def test_user_registration_missing_username(self):
+
+    def test_user_registration_missing_email(self):
         """Test the user registration"""
         response = self.client.post(
             self.register_url,

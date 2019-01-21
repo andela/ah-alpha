@@ -21,5 +21,6 @@ error_msg = {
 success_msg={
     "confirmed_email":"Email succesfully confirmed",
     "pwd_changed":"Your password was successfully changed",
-    "request_success":"Request successful,  a link has been sent to your email"
+    "request_success":"Request successful,  a link has been sent to your email",
+    "email_verify": "Your verification link sent, check your email",
 }

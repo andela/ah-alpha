@@ -2,8 +2,6 @@ import re
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
-
-# Local imports
 from .backends import JWTokens
 from .models import User
 from .validations import UserValidation
@@ -22,6 +20,12 @@ class RegistrationSerializer(serializers.ModelSerializer):
     # The client should not be able to send a token along with a registration
     # request. Making `token` read-only handles that for us.
     token = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        # List all of the fields that could possibly be included in a request
+        # or response, including fields specified explicitly above.
+        fields = ['email', 'username', 'password', 'token']
 
     def validate_username(self, value):
         """
@@ -46,12 +50,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
         password = value
         if(UserValidation.valid_password(self, password=password)):
             return value
-
-    class Meta:
-        model = User
-        # List all of the fields that could possibly be included in a request
-        # or response, including fields specified explicitly above.
-        fields = ['email', 'username', 'password', 'token']
 
     def create(self, validated_data):
         # Use the `create_user` method we wrote earlier to create a new user.
@@ -194,4 +192,4 @@ class ResetPasswordSerializer(serializers.Serializer):
 
     class Meta:
         model = User
-        fields = ('email')
+        fields = ['email']

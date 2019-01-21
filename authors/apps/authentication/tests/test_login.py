@@ -55,9 +55,9 @@ class UserLoginTest(APITestCase):
     def test_valid_login(self):
         """Test login a valid user"""
         self.client.post(
-            self.registration_uri,
-            self.valid_user_credentials,
-            format="json"
+                        self.registration_uri,
+                        self.valid_user_credentials,
+                        format="json"
         )
 
         response = self.client.post(
@@ -82,7 +82,6 @@ class UserLoginTest(APITestCase):
             format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertNotIn("token", response.data)
 
     def test_caps(self):
         """Test for capital letter in password"""

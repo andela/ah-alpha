@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     'authors.apps.core',
     'authors.apps.profiles',
     'rest_framework_swagger',
+    # credits --> https://github.com/axnsan12/drf-yasg
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -204,7 +206,7 @@ django_heroku.settings(locals())
 SWAGGER_SETTINGS = {
     'SHOW_REQUEST_HEADERS': True,
     'USE_SESSION_AUTH': False,
-    'DOC_EXPANSION': 'full',
+    'DOC_EXPANSION': 'list',
     'SECURITY_DEFINITIONS': {
         'api_key': {
             'type': 'apiKey',
@@ -213,4 +215,8 @@ SWAGGER_SETTINGS = {
         }
     },
     'JSON_EDITOR': True,
+    'REFETCH_SCHEMA_WITH_AUTH': True,
+    'REFETCH_SCHEMA_ON_LOGOUT': True,
+    'DEFAULT_MODEL_RENDERING': 'example',
+
 }

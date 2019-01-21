@@ -1,16 +1,17 @@
-import jwt
-from datetime import datetime
-from calendar import timegm
+
 from rest_framework_jwt.settings import api_settings
+import datetime
+import jwt
 from django.conf import settings
 from rest_framework import exceptions
 from rest_framework.authentication import TokenAuthentication
 secret_key = settings.SECRET_KEY
 
+"""Configure JWT Here"""
 
 class JWTokens(object):
     """
-    Handles token generation
+    Handle token generation
 
     """
     def create_token(self, user):
