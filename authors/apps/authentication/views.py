@@ -86,9 +86,9 @@ class RegistrationAPIView(GenericAPIView):
         send_mail(subject, "Verification mail", from_mail, [
                   to_mail], fail_silently=False, html_message=html_page)
         return Response({
-            "message":success_msg['email_verify'],
-            "username":serializer.data['username'],
-            "email":serializer.data['email']
+            "message": success_msg['email_verify'],
+            "username": serializer.data['username'],
+            "email": serializer.data['email']
         }, status=status.HTTP_201_CREATED)
 
 
