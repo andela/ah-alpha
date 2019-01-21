@@ -21,9 +21,9 @@ class UserRegistrationTest(APITestCase):
         # Data with valid user credentials
         self.valid_user_credentials = {
             "user": {
-                "username": "Wachira",
-                "email": "ewachira254@gmail.com",
-                "password": "@Wachira254"
+                "username":"wachira",
+                "email":"ewachira254@gmail.com",
+                "password":"Wachira254"
             }
         }
         # Data lacking a field <username>
@@ -43,29 +43,37 @@ class UserRegistrationTest(APITestCase):
             }
         }
 
-        self.invalid_username = {
+        self.invalid_username= {
             "user": {
-                "username": "W",
-                "email": "ewachira254@gmail.com",
-                "password": "123456"
+                "username":"123456",
+                "email":"ewachira254@gmail.com",
+                "password":"@Wachira254"
             }
         }
-
-        self.short_password = {
+        self.short_password= {
             "user": {
-                "username": "Wachira",
-                "email": "ewachira254@gmail.com",
-                "password": "AS"
+                "username":"hghgdh",
+                "email":"ewachira254@gmail.com",
+                "password":"Wah"
             }
         }
-
-        self.invalid_email = {
+        self.invalid_email= {
             "user": {
-                "username": "Wachira",
-                "email": "invalid.com",
-                "password": "AS"
+                "username":"qwertfg",
+                "email":"ewachira254gmail.com",
+                "password":"@Wachira254"
             }
         }
+        
+    def test_user_registration(self):
+        """Test the user registration"""
+        response = self.client.post(
+            self.register_url,
+            self.valid_user_credentials,
+            format="json"
+        )
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_user_registration(self):
         """Test the user registration"""
@@ -74,8 +82,8 @@ class UserRegistrationTest(APITestCase):
             self.valid_user_credentials,
             format="json"
         )
+        
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
 
     def test_user_registration_lacking_field(self):
         """Test lacking a field"""
@@ -85,7 +93,6 @@ class UserRegistrationTest(APITestCase):
             format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertNotIn("token", response.data)
 
     def test_user_registration_invalid_field_credentials(self):
         """
@@ -96,8 +103,7 @@ class UserRegistrationTest(APITestCase):
             self.invalid_field_credentials,
             format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertNotIn("token", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST);
 
     def test_validations(self):
         """
@@ -108,29 +114,25 @@ class UserRegistrationTest(APITestCase):
             self.invalid_field_credentials,
             format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertNotIn("token", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST);
 
         response = self.client.post(
             self.register_url,
             self.invalid_username,
             format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertNotIn("token", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST);
 
         response = self.client.post(
             self.register_url,
             self.short_password,
             format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertNotIn("token", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST);
 
         response = self.client.post(
             self.register_url,
             self.invalid_email,
             format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertNotIn("token", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST);

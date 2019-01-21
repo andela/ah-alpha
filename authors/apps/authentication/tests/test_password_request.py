@@ -41,7 +41,6 @@ class TestResetPassword(TestCase):
                     "email": "alphaandela@gmail.com"
                 }
             },
-
         ]
 
     def user_registration(self):
@@ -104,7 +103,6 @@ class TestResetPassword(TestCase):
             success_msg['request_success'])
 
         self.assertEqual(len(mail.outbox), 2)
-
         self.assertNotIn("token", response.data)
 
     def test_user_inputs_an_email_with_invalid_email(self):
