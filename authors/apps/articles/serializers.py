@@ -1,3 +1,7 @@
+import re
+import math
+import datetime as dt
+
 from django.core.exceptions import ValidationError
 
 from authors.apps.like_dislike.serializers import PreferenceSerializer
@@ -28,10 +32,27 @@ class ArticleSerializer(serializers.ModelSerializer):
     dislike_count = serializers.SerializerMethodField(read_only=True)
     like_status = serializers.SerializerMethodField(read_only=True)
     rating = serializers.SerializerMethodField(read_only=True)
+    read_time = serializers.SerializerMethodField()
 
     class Meta:
         model = Article
         fields = "__all__"
+
+    def get_read_time(self, instance):
+        """
+            Here we get the body of the article instance we want to create
+            Then we check if the body has words
+            We then check the length of the words
+            Then we divide the length with 200
+            Then we stringify the output to get it in a time format
+        """
+        body = instance.body
+        matching_words = re.findall(r'\w+', body)
+        count = len(matching_words)
+        read_per_min = math.ceil(count/200.0)
+        read_time = str(dt.timedelta(minutes=read_per_min))
+        return read_time
+
 
     def create_slug(self, title):
         """
