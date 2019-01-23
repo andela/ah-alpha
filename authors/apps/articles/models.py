@@ -17,7 +17,7 @@ class Article(models.Model):
     image_path = CloudinaryField(blank=True, null=True)
     slug = models.SlugField(max_length=255)
     title = models.CharField(db_index=True, max_length=255)
-    body = models.CharField(db_index=True, max_length=8055)
+    body = models.TextField(db_index=True, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     favourites = models.BooleanField(default=False)

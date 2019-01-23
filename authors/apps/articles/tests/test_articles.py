@@ -117,6 +117,23 @@ class ArticleTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+    
+    def test_read_time(self):
+        """
+            Test GET /api/v1/article/<slug>/
+        """
+        token = self.login(self.user_data)
+        self.create_article(self.valid_article_data['article'])
+        url = self.get_slug_from_title(
+        self.valid_article_data['article']['title'])
+        response = self.client.get(
+                url,
+                format="json",
+                HTTP_AUTHORIZATION="Bearer {}".format(token)
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(response.data['read_time'],'0:01:00')
+
     def test_remove_one_article(self):
         """
             Test DELETE /api/v1/article/<slug>/

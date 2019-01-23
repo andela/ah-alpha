@@ -123,7 +123,6 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
             article.updated_at = dt.datetime.utcnow()
             article.title = article_data['title']
             article.image_path = article_data['image_path']
-            article.description = article_data['description']
             article.body = article_data['body']
             serializer = ArticleSerializer(
                 instance=article, data=article_data,
