@@ -1,6 +1,7 @@
-
+import os
 from rest_framework_jwt.settings import api_settings
 import datetime
+from datetime import datetime, timedelta
 import jwt
 from django.conf import settings
 from rest_framework import exceptions
@@ -27,7 +28,16 @@ class JWTokens(object):
 
         return token
 
-"""Configure JWT Here"""
+    def encode_token(self, user):
+        """
+        This method gerate token by encoding registered user
+        email address
+        """
+        payload = {
+           'id': user,
+           'iat': datetime.utcnow()
+        }
+        return jwt.encode(payload, secret_key).decode('UTF-8')
 
 
 class GetAuthentication(TokenAuthentication):
