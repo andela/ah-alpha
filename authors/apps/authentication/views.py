@@ -18,16 +18,20 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import ManualSchema
 from rest_framework.views import APIView, status
-from .backends import GetAuthentication
+from .backends import GetAuthentication, JWTokens
 from .messages import error_msg, success_msg
 from .models import User
+from requests.exceptions import HTTPError
 from .renderers import UserJSONRenderer
 from .serializers import (LoginSerializer, RegistrationSerializer,
-                          ResetPasswordSerializer, UserSerializer)
+                          ResetPasswordSerializer, UserSerializer, 
+                          SocialSignInSignOutSerializer)
 
-
-from .backends import GetAuthentication
 from .messages import error_msg, success_msg
+from social_django.utils import load_backend, load_strategy
+from social_core.exceptions import MissingBackend, AuthTokenError, AuthForbidden
+from django.db import IntegrityError
+from social_core.backends.oauth import BaseOAuth1, BaseOAuth2
 
 
 class RegistrationAPIView(GenericAPIView):
@@ -399,3 +403,95 @@ class ResetPasswordAPIView(UpdateAPIView):
         It's here for the sake of swagger :-)
         """
         pass
+
+
+class SocialSignInSignOut(CreateAPIView):
+    permission_classes = (AllowAny,)
+    renderer_classes = (UserJSONRenderer,)
+    serializer_class = SocialSignInSignOutSerializer
+
+    def post(self, request, *args, **kwargs):
+        """ interrupt social_auth authentication pipeline"""
+        # pass the request to serializer to make it a python object
+        # serializer also catches errors of blank request objects
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        provider = serializer.data.get('provider', None)
+        strategy = load_strategy(request)  # creates the app instance
+
+        if request.user.is_anonymous:  # make sure the user is not anonymous
+            user = None
+        else:
+            user = request.user
+
+        try:
+            # load backend with strategy and provider from settings(AUTHENTICATION_BACKENDS)
+            backend = load_backend(
+                strategy=strategy, name=provider, redirect_uri=None)
+
+        except MissingBackend as error:
+
+            return Response({
+                "errors": str(error)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # check type of oauth provide e.g facebook is BaseOAuth2 twitter is BaseOAuth1
+            if isinstance(backend, BaseOAuth1):
+                # oath1 passes access token and secret
+                access_token = {
+                    "oauth_token": serializer.data.get('access_token'),
+                    "oauth_token_secret": serializer.data.get('access_token_secret'),
+                }
+
+            elif isinstance(backend, BaseOAuth2):
+                # oauth2 only has access token
+                access_token = serializer.data.get('access_token')
+                
+        except HTTPError as error:
+            return Response({
+                "error": {
+                    "access_token": "invalid token",
+                    "details": str(error)
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        except AuthTokenError as error:
+            return Response({
+                "error": "invalid credentials",
+                "details": str(error)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # authenticate the current user
+            # social pipeline associate by email handles already associated exception
+            authenticated_user = backend.do_auth(access_token, user=user)
+            
+        except HTTPError as error:
+            # catch any error as a result of the authentication
+            return Response({
+                "error": "Http Error",
+                "details": str(error)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        except AuthForbidden as error:
+            return Response({
+                "error": "invalid token",
+                "details": str(error)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if authenticated_user and authenticated_user.is_active:
+            # Check if the user you intend to authenticate is active
+            token = JWTokens.encode_token(self, user)
+            headers = self.get_success_headers(serializer.data)
+            response = {"email": authenticated_user.email,
+                        "username": authenticated_user.username,
+                        "token": token}
+
+            return Response(response, status=status.HTTP_201_CREATED,
+                            headers=headers)
+        else:
+            return Response({"errors": "Could not authenticate"},
+                            status=status.HTTP_400_BAD_REQUEST)
+

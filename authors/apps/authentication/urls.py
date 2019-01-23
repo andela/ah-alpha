@@ -2,7 +2,8 @@ from django.urls import path
 
 from .views import (
     LoginAPIView, RegistrationAPIView, UserRetrieveUpdateAPIView,
-    VerifyAPIView, PasswordResetRequestAPIView, ResetPasswordAPIView
+    VerifyAPIView, PasswordResetRequestAPIView, ResetPasswordAPIView, 
+    SocialSignInSignOut
 )
 
 app_name = "auth"
@@ -16,4 +17,6 @@ urlpatterns = [
          name="reset_request"),
     path('users/password_reset/<str:token>',
          ResetPasswordAPIView.as_view(), name="password_reset"),
+    path('social_auth/', SocialSignInSignOut.as_view(),
+            name="social_signin_signup"),
 ]
