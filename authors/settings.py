@@ -29,13 +29,13 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # Email config
-EMAIL_HOST=os.getenv("EMAIL_HOST")
-EMAIL_HOST_USER=os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD=os.getenv("EMAIL_HOST_PASSWORD")
-EMAIL_PORT=587
-DEFAULT_FROM_EMAIL=os.getenv("DEAFULT_FROM_EMAIL")
-EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend"
-EMAIL_USE_TLS=True
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = 587
+DEFAULT_FROM_EMAIL = os.getenv("DEAFULT_FROM_EMAIL")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_USE_TLS = True
 
 # Application definition
 
@@ -50,9 +50,12 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_extensions',
     'rest_framework',
+    'taggit',
 
     'authors.apps.authentication',
     'authors.apps.articles',
+
+    'authors.apps.like_dislike',
     'authors.apps.core',
     'cloudinary',
     'authors.apps.profiles',
@@ -188,7 +191,7 @@ JWT_AUTH = {
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_LEEWAY': 0,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3600),
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=3),
     'JWT_AUDIENCE': None,
     'JWT_ISSUER': None,
 
@@ -201,10 +204,10 @@ JWT_AUTH = {
 }
 
 CLOUDINARY = {
-   'cloud_name': os.getenv('CLOUDINARY_NAME'),
-   'api_key': os.getenv('CLOUDINARY_KEY'),
-   'api_secret': os.getenv('CLOUDINARY_SECRET'),
-   'secure': True
+    'cloud_name': os.getenv('CLOUDINARY_NAME'),
+    'api_key': os.getenv('CLOUDINARY_KEY'),
+    'api_secret': os.getenv('CLOUDINARY_SECRET'),
+    'secure': True
 }
 
 # Activate Django-Heroku.
@@ -228,11 +231,4 @@ SWAGGER_SETTINGS = {
     'REFETCH_SCHEMA_ON_LOGOUT': True,
     'DEFAULT_MODEL_RENDERING': 'example',
 
-}
-
-CLOUDINARY = {
-    'cloud_name': os.getenv('CLOUDINARY_NAME'),
-    'api_key': os.getenv('CLOUDINARY_KEY'),
-    'api_secret': os.getenv('CLOUDINARY_SECRET'),
-    'secure': True
 }

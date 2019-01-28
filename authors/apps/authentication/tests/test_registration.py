@@ -64,16 +64,6 @@ class UserRegistrationTest(APITestCase):
                 "password":"@Wachira254"
             }
         }
-        
-    def test_user_registration(self):
-        """Test the user registration"""
-        response = self.client.post(
-            self.register_url,
-            self.valid_user_credentials,
-            format="json"
-        )
-        
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_user_registration(self):
         """Test the user registration"""
@@ -82,8 +72,8 @@ class UserRegistrationTest(APITestCase):
             self.valid_user_credentials,
             format="json"
         )
-        
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
 
     def test_user_registration_lacking_field(self):
         """Test lacking a field"""
