@@ -5,10 +5,12 @@ from django.template.defaultfilters import slugify
 from ..models import Article
 from ...authentication.models import User
 
+
 class ArticleTestCase(APITestCase):
     """
         Article endpoints test
     """
+
     def setUp(self):
         """
             Setup method
@@ -16,33 +18,33 @@ class ArticleTestCase(APITestCase):
         # All articles urls
         self.all_article_url = reverse("articles:articles")
         self.login_url = reverse("auth:login")
-        self.register =  reverse("auth:register")
+        self.register = reverse("auth:register")
         self.client = APIClient()
         self.valid_article_data = {
-            "article":{
-                "image_path":"......",
-                "title":"Its a test article",
-                "body":"Its a test article body"
+            "article": {
+                "image_path": "......",
+                "title": "Its a test article",
+                "body": "Its a test article body"
             }
         }
 
         self.invalid_article_data = {
-                "image_path":"......",
-                "title":"Its a test article",
-                "body":""
-            }
+            "image_path": "......",
+            "title": "Its a test article",
+            "body": ""
+        }
 
         self.update_article_data = {
-                "image_path":"......",
-                "title":"Its a test article",
-                "body":"ajdlkjasl;dkfjalk;sdjf"
-            }
+            "image_path": "......",
+            "title": "Its a test article",
+            "body": "ajdlkjasl;dkfjalk;sdjf"
+        }
 
         self.user_data = {
-            "user":{
-                "username":"test",
-                "email":"test@fmail.com",
-                "password":"Test@254"
+            "user": {
+                "username": "test",
+                "email": "test@fmail.com",
+                "password": "Test@254"
             }
         }
 
@@ -70,11 +72,10 @@ class ArticleTestCase(APITestCase):
         specific_article_url = reverse(
             "articles:specific_article",
             kwargs={
-                "slug":slugify(title)
+                "slug": slugify(title)
             }
         )
         return specific_article_url
-
 
     def create_article(self, data):
         """
@@ -107,7 +108,8 @@ class ArticleTestCase(APITestCase):
         """
         token = self.login(self.user_data)
         self.create_article(self.valid_article_data['article'])
-        url = self.get_slug_from_title(self.valid_article_data['article']['title'])
+        url = self.get_slug_from_title(
+            self.valid_article_data['article']['title'])
         response = self.client.get(
             url,
             format="json",
@@ -121,10 +123,11 @@ class ArticleTestCase(APITestCase):
         """
         token = self.login(self.user_data)
         self.create_article(self.valid_article_data['article'])
-        url = self.get_slug_from_title(self.valid_article_data['article']['title'])
+        url = self.get_slug_from_title(
+            self.valid_article_data['article']['title'])
         response = self.client.delete(
-            url, 
-            format = "json",
+            url,
+            format="json",
             HTTP_AUTHORIZATION="Bearer {}".format(token)
         )
         self.assertEqual(response.status_code, 403)
@@ -187,7 +190,8 @@ class ArticleTestCase(APITestCase):
         """
         token = self.login(self.user_data)
         self.create_article(self.valid_article_data['article'])
-        url = self.get_slug_from_title(self.valid_article_data['article']['title'])
+        url = self.get_slug_from_title(
+            self.valid_article_data['article']['title'])
         response = self.client.put(
             url,
             data=self.update_article_data,
@@ -202,4 +206,3 @@ class ArticleTestCase(APITestCase):
         """
         User.objects.all().delete()
         Article.objects.all().delete()
-        

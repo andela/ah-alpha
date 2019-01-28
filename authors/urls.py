@@ -32,10 +32,10 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
-# schema_view1 = get_swagger_view(title='Authors Haven')
-
 urlpatterns = [
     path('admin/', admin.site.urls),
+	path('api/v1/', include('authors.apps.articles.urls')),
+    path('api/v1/', include('authors.apps.like_dislike.urls', namespace='likes')),
     path('swagger.json',
         schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger.yaml',

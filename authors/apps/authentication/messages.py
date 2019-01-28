@@ -26,5 +26,14 @@ success_msg = {
     "request_success": "Request successful,a link has been sent to your email",
     "email_verify": "Your verification link sent, check your email",
     "profil_update": "Profile  update successful",
-    "profil_success": "Request successful"
+    "profil_success": "Request successful",
+    "Like": "Great, you've liked this",
+    'Dislike': "Okay, you've disliked this",
+    'Null': "Undone!",
+}
+
+statusmessage = {
+    'Like': "Liked",
+    'Dislike': "Disliked",
+    'Null': "Null",
 }

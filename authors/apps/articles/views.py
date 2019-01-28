@@ -21,7 +21,6 @@ class ArticleAPIView(generics.ListCreateAPIView):
     """
         Article endpoints
     """
-    renderer_classes = (ArticleJSONRenderer,)
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
 
@@ -32,10 +31,12 @@ class ArticleAPIView(generics.ListCreateAPIView):
         permission_classes = (IsAuthenticated,)
         context = {"request": request}
         article = request.data.copy()
-        article['slug'] = ArticleSerializer().create_slug(request.data['title'])
+
+        article['slug'] = ArticleSerializer(
+        ).create_slug(request.data['title'])
         serializer = self.serializer_class(data=article, context=context)
         if serializer.is_valid():
-            serializer.save(author = request.user)
+            serializer.save(author=request.user)
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED
@@ -51,7 +52,13 @@ class ArticleAPIView(generics.ListCreateAPIView):
         """
         permission_classes = (AllowAny,)
         queryset = self.get_queryset()
-        serializer = ArticleSerializer(queryset, many=True)
+        serializer = ArticleSerializer(
+            queryset,
+            context={
+                'request': request
+            },
+            many=True
+        )
         return Response(serializer.data, status=200)
 
 
@@ -73,11 +80,13 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
             raise exceptions.NotFound({
                 "message": error_msgs['not_found']
             })
-        serializer = ArticleSerializer(article, many=False)
-        return Response(
-            serializer.data,
-            status=200
+        serializer = ArticleSerializer(
+            article,
+            context={
+                'request': request
+            }
         )
+        return Response(serializer.data, status=200)
 
     def delete(self, request, slug, *args, **kwargs):
         """
@@ -87,16 +96,16 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
             article = Article.objects.get(slug=slug)
         except Article.DoesNotExist:
             raise exceptions.NotFound({
-                "message":error_msgs['not_found']
+                "message": error_msgs['not_found']
             })
         if request.user.id != article.author_id:
             return Response({
-                "message":error_msgs["article_owner_error"]
+                "message": error_msgs["article_owner_error"]
             }, status=403)
         else:
             article.delete()
             return Response({
-                "article":success_msg['article_delete']
+                "article": success_msg['article_delete']
             }, status=204)
 
     def put(self, request, slug, *args, **kwargs):
@@ -106,7 +115,7 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
         article = get_object_or_404(Article.objects.all(), slug=slug)
         if request.user.id != article.author_id:
             return Response({
-                "message":error_msgs['article_owner_error']
+                "message": error_msgs['article_owner_error']
             }, status=403)
         else:
             article_data = request.data
@@ -116,14 +125,14 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
             article.description = article_data['description']
             article.body = article_data['body']
             serializer = ArticleSerializer(
-                instance=article, data=article_data, partial=True
+                instance=article, data=article_data, context={'request': request}, partial=True
             )
             if serializer.is_valid():
                 serializer.save(author=request.user)
                 return Response(
                     [
                         serializer.data,
-                        [{"message":success_msg['article_update']}]
+                        [{"message": success_msg['article_update']}]
                     ], status=201
                 )
             else:
