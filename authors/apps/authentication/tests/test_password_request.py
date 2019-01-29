@@ -22,25 +22,17 @@ class TestResetPassword(TestCase):
         }
         self.user_email = [
             {
-                "user": {
-                    "email": ""
-                }
-            },
+                "email": ""
+                },
             {
-                "user": {
                     "email": "newuser@gmail.com"
-                }
-            },
+                },
             {
-                "user": {
                     "email": "alpha@andela"
-                }
-            },
-            {
-                "user": {
+                },
+             {
                     "email": "alphaandela@gmail.com"
-                }
-            },
+                },
         ]
 
     def user_registration(self):
@@ -56,10 +48,8 @@ class TestResetPassword(TestCase):
         """Get email of the registered user"""
         email = self.user_registration().data['email']
         mail = {
-            "user": {
                 "email": email
             }
-        }
         return mail
 
     def submit_email(self, data):

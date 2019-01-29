@@ -197,7 +197,7 @@ class PasswordResetRequestAPIView(GenericAPIView):
     )
     def post(self, request):
         user_data = request.data
-        email = user_data['user']['email']
+        email = user_data['email']
 
         # confirms if an eamil has been provided
         # if email is not given then an error message is thrown

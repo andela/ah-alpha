@@ -19,6 +19,3 @@ class Rating(models.Model):
     )
 
     your_rating = models.FloatField(null=False)
-
-    def __str__(self):
-        return self.your_rating

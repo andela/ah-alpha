@@ -11,7 +11,7 @@ from rest_framework import serializers
 from django.template.defaultfilters import slugify
 from django.contrib.contenttypes.models import ContentType
 
-from ..authentication.serializers import RegistrationSerializer
+from authors.apps.authentication.serializers import RegistrationSerializer
 from .messages import error_msgs
 from .models import Article, Tags
 from ..authentication.serializers import RegistrationSerializer

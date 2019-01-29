@@ -3,9 +3,11 @@ import re
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
+
 from .backends import JWTokens
 from .models import User
 from .validations import UserValidation
+from authors.apps.favorite.serializers import FavoriteSerializer
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -21,12 +23,15 @@ class RegistrationSerializer(serializers.ModelSerializer):
     # The client should not be able to send a token along with a registration
     # request. Making `token` read-only handles that for us.
     token = serializers.CharField(read_only=True)
+    favorites = FavoriteSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = User
         # List all of the fields that could possibly be included in a request
         # or response, including fields specified explicitly above.
-        fields = ['email', 'username', 'password', 'token']
+        fields = (
+            "username", "email", "favorites", "password", "token"
+        )
 
     def validate(self, data):
         """Validates the data"""

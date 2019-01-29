@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'authors.apps.like_dislike',
     'authors.apps.core',
     'authors.apps.comments',
+    "authors.apps.favorite",
     'authors.apps.profiles',
     'authors.apps.reading_stats',
     'rest_framework_swagger',
