@@ -28,10 +28,6 @@ class Article(models.Model):
 
     objects = models.Manager()
 
-    def __str__(self):
-        return self.title
-
-
 class Tags(models.Model):
     tag = models.CharField(max_length=120)
 

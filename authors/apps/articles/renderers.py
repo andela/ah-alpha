@@ -12,3 +12,4 @@ class ArticleJSONRenderer(JSONRenderer):
         return json.dumps({
             'articles': data
         })
+        
