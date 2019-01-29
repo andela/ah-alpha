@@ -13,13 +13,16 @@ from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema
 from drf_yasg.utils import swagger_auto_schema, swagger_serializer_method
 from rest_framework import exceptions, generics, status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import status, exceptions
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from datetime import datetime, timedelta
 from rest_framework.views import Response
 
-from .messages import error_msgs, success_msg
-from .models import Article
 from .renderers import ArticleJSONRenderer
-from .serializers import ArticleSerializer
+from .models import Article, Tags
+from .serializers import ArticleSerializer, TagSerializers
+from .messages import error_msgs, success_msg
 
 
 class ArticleAPIView(generics.ListCreateAPIView):
@@ -128,10 +131,6 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
             }, status=403)
         else:
             article_data = request.data
-            article.updated_at = dt.datetime.utcnow()
-            article.title = article_data['title']
-            article.image_path = article_data['image_path']
-            article.body = article_data['body']
             serializer = ArticleSerializer(
                 instance=article,
                 data=article_data,
@@ -151,3 +150,27 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
                     serializer.errors,
                     status=400
                 )
+
+
+class TagAPIView(generics.ListAPIView):
+    queryset = Tags.objects.all()
+    serializer_class = TagSerializers
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    def get(self, *args):
+        """
+            GET /api/v1/tags/
+        """
+        data = self.get_queryset()
+        serializer = self.serializer_class(data, many=True)
+
+        if data:
+            return Response({
+                'message': success_msg['tag_get'],
+                'tags': serializer.data
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            'message': error_msgs['tags_not_found'],
+        }, status=status.HTTP_404_NOT_FOUND)
+

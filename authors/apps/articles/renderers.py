@@ -7,12 +7,8 @@ class ArticleJSONRenderer(JSONRenderer):
     charset = 'utf-8'
 
     def render(self, data, media_type=None, renderer_context=None):
-        errors = data.get('errors', None)
-
-        if errors is not None:
-            return super(ArticleJSONRenderer, self).render(data)
 
         # Finally, we can render our data under the "user" namespace.
         return json.dumps({
-            'article': data
+            'articles': data
         })
