@@ -13,11 +13,12 @@ from django.contrib.contenttypes.models import ContentType
 
 from ..authentication.serializers import RegistrationSerializer
 from .messages import error_msgs
-from .models import Article
+from .models import Article, Tags
 from ..authentication.serializers import RegistrationSerializer
 from .messages import error_msgs
 from ..rating.models import Rating
 from django.db.models import Avg
+from authors.apps.articles.relations import TagsRelation
 
 
 class ArticleSerializer(serializers.ModelSerializer):
@@ -28,6 +29,7 @@ class ArticleSerializer(serializers.ModelSerializer):
     image_path = serializers.ImageField(default=None)
     title = serializers.CharField(required=True)
     body = serializers.CharField(required=True)
+    tags = TagsRelation(many=True, required=False)
     like_count = serializers.SerializerMethodField(read_only=True)
     dislike_count = serializers.SerializerMethodField(read_only=True)
     like_status = serializers.SerializerMethodField(read_only=True)
@@ -102,3 +104,12 @@ class ArticleSerializer(serializers.ModelSerializer):
             return average_rating
 
         return average['your_rating__avg']
+
+
+class TagSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Tags
+        fields = ('tag',)
+
+    def to_representation(self, instance):
+        return instance.tag

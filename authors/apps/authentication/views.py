@@ -38,6 +38,13 @@ from .serializers import (LoginSerializer, RegistrationSerializer,
 from .utils import status_codes, swagger_body
 from .validations import UserValidation
 
+from .messages import error_msg, success_msg
+from social_django.utils import load_backend, load_strategy
+from social_core.exceptions import (MissingBackend, AuthTokenError,
+                                    AuthForbidden)
+from django.db import IntegrityError
+from social_core.backends.oauth import BaseOAuth1, BaseOAuth2
+
 
 class RegistrationAPIView(GenericAPIView):
     # Allow any user (authenticated or not) to hit this endpoint.
@@ -381,7 +388,7 @@ class SocialSignInSignOut(CreateAPIView):
 
         if authenticated_user and authenticated_user.is_active:
             # Check if the user you intend to authenticate is active
-            token = JWTokens.encode_token(self, user)
+            token = JWTokens.create_token(self, authenticated_user)
             headers = self.get_success_headers(serializer.data)
             response = {"email": authenticated_user.email,
                         "username": authenticated_user.username,

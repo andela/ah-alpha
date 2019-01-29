@@ -17,7 +17,8 @@ class Article(models.Model):
     image_path = CloudinaryField(blank=True, null=True)
     slug = models.SlugField(max_length=255)
     title = models.CharField(db_index=True, max_length=255)
-    body = models.TextField(db_index=True, blank=False)
+    body = models.CharField(db_index=True, max_length=8055)
+    tags = models.ManyToManyField('articles.Tags')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     favourites = models.BooleanField(default=False)
@@ -29,3 +30,10 @@ class Article(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Tags(models.Model):
+    tag = models.CharField(max_length=120)
+
+    def __str__(self):
+            return self.tag
