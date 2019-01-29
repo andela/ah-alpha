@@ -2,12 +2,17 @@ import json
 import os
 import re
 from datetime import datetime, timedelta
+
 import django
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.template import context
 from django.template.loader import get_template, render_to_string
+from requests.exceptions import HTTPError
+
 import jwt
+from authors.apps.authentication.validations import UserValidation
 from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema
 from drf_yasg.utils import swagger_auto_schema, swagger_serializer_method
@@ -18,20 +23,20 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import ManualSchema
 from rest_framework.views import APIView, status
+from social_core.backends.oauth import BaseOAuth1, BaseOAuth2
+from social_core.exceptions import (AuthForbidden, AuthTokenError,
+                                    MissingBackend)
+from social_django.utils import load_backend, load_strategy
+
 from .backends import GetAuthentication, JWTokens
 from .messages import error_msg, success_msg
 from .models import User
-from requests.exceptions import HTTPError
 from .renderers import UserJSONRenderer
 from .serializers import (LoginSerializer, RegistrationSerializer,
-                          ResetPasswordSerializer, UserSerializer, 
-                          SocialSignInSignOutSerializer)
-
-from .messages import error_msg, success_msg
-from social_django.utils import load_backend, load_strategy
-from social_core.exceptions import MissingBackend, AuthTokenError, AuthForbidden
-from django.db import IntegrityError
-from social_core.backends.oauth import BaseOAuth1, BaseOAuth2
+                          ResetPasswordSerializer,
+                          SocialSignInSignOutSerializer, UserSerializer)
+from .utils import status_codes, swagger_body
+from .validations import UserValidation
 
 
 class RegistrationAPIView(GenericAPIView):
@@ -41,33 +46,18 @@ class RegistrationAPIView(GenericAPIView):
     serializer_class = RegistrationSerializer
 
     swagger_schema = SwaggerAutoSchema
-    # the line above simply sets the swagger schema to be applied in this class.
-    # here, we're comfortable using the one defined in settings.py, which currently,
+    # the line above simply sets the swagger schema to be applied in this
+    # class.
+    # here, we're comfortable using the one defined in settings.py, which
+    # currently,
     # is set to the default that ships with drf_yasg.
 
-    # lets override some properties of the the default schema with our own values
+    # lets override some properties of the the default schema with our own
+    # values
     @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "user": openapi.Schema(
-                    required=['email', 'username', 'password'],
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'email': openapi.Schema(type=openapi.TYPE_STRING,
-                                                format=openapi.FORMAT_EMAIL),
-                        'username': openapi.Schema(type=openapi.TYPE_STRING),
-                        'password': openapi.Schema(type=openapi.TYPE_STRING)
-                    })
-            },
-        ),
-        responses={
-            status.HTTP_400_BAD_REQUEST: openapi.Response(
-                description="Bad Request"),
-            status.HTTP_201_CREATED: openapi.Response(
-                description="Success"
-            )
-        }
+        request_body=swagger_body(prefix="user", fields=(
+            'email', 'username', 'password')),
+        responses=status_codes(codes=(201, 400))
     )
     def post(self, request):
         """
@@ -85,8 +75,12 @@ class RegistrationAPIView(GenericAPIView):
         site_url = "http://"+get_current_site(request).domain
         subject = "Account Verification"
         link_url = site_url+"/api/v1/users/verify/{}".format(token)
-        html_page = render_to_string("email_verification.html", context={
-                                     "link": link_url, "user_name": serializer.data.get("username")})
+        html_page = render_to_string(
+            "email_verification.html",
+            context={"link": link_url,
+                     "user_name": serializer.data.get("username")
+                     }
+        )
         send_mail(subject, "Verification mail", from_mail, [
                   to_mail], fail_silently=False, html_message=html_page)
         return Response({
@@ -106,28 +100,11 @@ class LoginAPIView(GenericAPIView):
     # handles everything we need.
     swagger_schema = SwaggerAutoSchema
 
-    # lets override some properties of the the default schema with our own values
+    # lets override some properties of the the default schema with our own
+    # values
     @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "user": openapi.Schema(
-                    required=['email', 'password'],
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'email': openapi.Schema(type=openapi.TYPE_STRING,
-                                                format=openapi.FORMAT_EMAIL),
-                        'password': openapi.Schema(type=openapi.TYPE_STRING)
-                    })
-            },
-        ),
-        responses={
-            status.HTTP_200_OK: openapi.Response(
-                description="OK"
-            ), status.HTTP_400_BAD_REQUEST: openapi.Response(
-                description="Bad Request"
-            )
-        }
+        request_body=swagger_body(prefix="user", fields=('email', 'password')),
+        responses=status_codes(codes=(200, 400))
     )
     def post(self, request):
         user = request.data.get('user', {})
@@ -142,54 +119,29 @@ class UserRetrieveUpdateAPIView(GenericAPIView):
     serializer_class = UserSerializer
     swagger_schema = SwaggerAutoSchema
 
-    @swagger_auto_schema(responses={
-        status.HTTP_404_NOT_FOUND: openapi.Response(
-            description="Not Found"),
-        status.HTTP_200_OK: openapi.Response(
-            description="OK")})
+    @swagger_auto_schema(responses=status_codes(codes=(200, 400)))
     def get(self, request, *args, **kwargs):
         # There is nothing to validate or save here. Instead, we just want the
         # serializer to handle turning our `User` object into something that
         # can be JSONified and sent to the client.
         serializer = self.serializer_class(request.user)
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # lets override some properties of the the default schema with our own values
+    # lets override some properties of the the default schema with our own
+    # values
     @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "user": openapi.Schema(
-                    required=['email', 'username', 'password'],
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'email': openapi.Schema(type=openapi.TYPE_STRING,
-                                                format=openapi.FORMAT_EMAIL),
-                        'username': openapi.Schema(type=openapi.TYPE_STRING),
-                        'password': openapi.Schema(type=openapi.TYPE_STRING)
-                    })
-            },
-        ),
-        responses={
-            status.HTTP_400_BAD_REQUEST: openapi.Response(
-                description="Bad Request"),
-            status.HTTP_201_CREATED: openapi.Response(
-                description="Success"
-            )
-        }
-    )
+        request_body=swagger_body(prefix="user", fields=(
+            'email', 'username', 'password')),
+        responses=status_codes(codes=(201, 400)))
     def put(self, request, *args, **kwargs):
         serializer_data = request.data.get('user', {})
 
         # Here is that serialize, validate, save pattern we talked about
         # before.
         serializer = self.serializer_class(
-            request.user, data=serializer_data, partial=True
-        )
+            request.user, data=serializer_data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -198,12 +150,10 @@ class VerifyAPIView(GenericAPIView):
     serializer_class = UserSerializer
     swagger_schema = SwaggerAutoSchema
 
-    # lets override some properties of the the default schema with our own values
+    # lets override some properties of the the default schema with our own
+    # values
     @swagger_auto_schema(
-        responses={
-            status.HTTP_200_OK: openapi.Response(
-                description="OK")
-        }
+        responses=status_codes(codes=(200, 404))
     )
     def get(self, request, token):
         """
@@ -231,28 +181,12 @@ class PasswordResetRequestAPIView(GenericAPIView):
     serializer_class = ResetPasswordSerializer
     swagger_schema = SwaggerAutoSchema
 
-    # lets override some properties of the the default schema with our own values
+    # lets override some properties of the the default schema with our own
+    # values
     @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "user": openapi.Schema(
-                    required=['email'],
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'email': openapi.Schema(type=openapi.TYPE_STRING,
-                                                format=openapi.FORMAT_EMAIL)
-                    })
-            },
-        ),
-        responses={
-            status.HTTP_200_OK: openapi.Response(
-                description="OK"
-            ),
-            status.HTTP_400_BAD_REQUEST: openapi.Response(
-                description="Bad Request"
-            )
-        }
+        request_body=swagger_body(prefix="user", fields=(
+            'email',)),
+        responses=status_codes(codes=(200, 400))
     )
     def post(self, request):
         user_data = request.data
@@ -270,7 +204,7 @@ class PasswordResetRequestAPIView(GenericAPIView):
                 'message': error_msg['email_format']
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # confrims if a user with the given email actually exists
+        # Confirms if a user with the given email actually exists
         # If user exists then the user instance is returned
         # the user instance is used to generate a token
         # a response is given with the email and the generated token
@@ -289,7 +223,8 @@ class PasswordResetRequestAPIView(GenericAPIView):
             # format the email
             host = request.get_host()
             protocol = request.scheme
-            reset_link = protocol + '://' + host + '/api/v1/users/password_reset/' + token
+            base_url = '/api/v1/users/password_reset/'
+            reset_link = protocol + '://' + host + base_url + token
             subject = "Password Reset for Authors Haven Web Portal account"
             message = render_to_string(
                 'request_password_reset.html', {
@@ -300,7 +235,6 @@ class PasswordResetRequestAPIView(GenericAPIView):
                 })
             to_email = email
             from_email = os.getenv("DEFAULT_FROM_EMAIL")
-
             send_mail(
                 subject,
                 message,
@@ -309,18 +243,15 @@ class PasswordResetRequestAPIView(GenericAPIView):
                 ],
                 html_message=message,
                 fail_silently=False)
-
             message = {
-                'Message':
-                success_msg['request_success'],
+                'Message': success_msg['request_success'],
                 'Token': token
             }
             return Response(message, status=status.HTTP_200_OK)
 
         # If user does not exist then an error is thrown to the user
         return Response({
-            'message': error_msg['unregistered_email'],
-        },
+            'message': error_msg['unregistered_email']},
             status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -329,76 +260,43 @@ class ResetPasswordAPIView(UpdateAPIView):
     serializer_class = UserSerializer
     swagger_schema = SwaggerAutoSchema
 
-    # lets override some properties of the the default schema with our own values
+    # lets override some properties of the the default schema with our own
+    # values
     @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "user": openapi.Schema(
-                    required=['email'],
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'password': openapi.Schema(type=openapi.TYPE_STRING)
-                    })
-            },
-        ),
-        responses={
-            status.HTTP_200_OK: openapi.Response(
-                description="OK"
-            ), status.HTTP_400_BAD_REQUEST: openapi.Response(
-                description="Bad Request"
-            )
-        }
-    )
+        request_body=swagger_body(prefix="user", fields=(
+            'password',)),
+        responses=status_codes(codes=(200, 400)))
     def patch(self, request, token, **kwargs):
-
         # decode the token
         decoded = GetAuthentication.decode_jwt_token(token)
-
         # use the email to find decode the user instance
         user = User.objects.get(email=decoded['email'])
-
         # get the password that the user is keying in
         password = request.data['user']['password']
-
         # now we validate the password
-        if len(password) < 8:
-            return Response({
-                "message": error_msg["short_pwd"]
-            }, status=status.HTTP_400_BAD_REQUEST)
-        elif re.search('[0-9]', password) is None:
-            return Response({
-                "message": error_msg["number_in_pwd"]
-            }, status=status.HTTP_400_BAD_REQUEST)
-        elif re.search('[a-z]', password) is None:
-            return Response({
-                "message": error_msg["letter_in_pwd"]
-            }, status=status.HTTP_400_BAD_REQUEST)
-        elif re.search('[A-Z]', password) is None:
-            return Response({
-                "message": error_msg["caps_in_pwd"]
-            }, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            # save the password after we have validated it
-            self.serializer_class.update(
-                None,
-                user,
-                {
-                    "password": password
-                }
-            )
-            # Alert the user that the user has completed the password request
-            return Response(
-                {"message": success_msg["pwd_changed"]},
-                status=status.HTTP_200_OK)
+        UserValidation.valid_password(self, password)
+        # save the password after we have validated it
+        self.serializer_class.update(
+            None,
+            user,
+            {
+                "password": password
+            }
+        )
+        # Alert the user that the user has completed the password request
+        return Response(
+            {"message": success_msg["pwd_changed"]},
+            status=status.HTTP_200_OK)
 
-    # by dafault, swagger generates schemas for all endpoints available in class based views
+    # by dafault, swagger generates schemas for all endpoints available in
+    # class based views
     # in this case, UpdateAPIView, has PATCH and PUT endpoints
-    # setting auto_schema to None prevents this(PUT) endpoint from being included in the swagger docs
+    # setting auto_schema to None prevents this(PUT) endpoint from being
+    # included in the swagger docs
     @swagger_auto_schema(auto_schema=None)
     def put(self):
         """
-        Does nothing at the moment
+        Does nothing at the moment.
 
         It's here for the sake of swagger :-)
         """
@@ -448,7 +346,7 @@ class SocialSignInSignOut(CreateAPIView):
             elif isinstance(backend, BaseOAuth2):
                 # oauth2 only has access token
                 access_token = serializer.data.get('access_token')
-                
+
         except HTTPError as error:
             return Response({
                 "error": {
@@ -467,7 +365,7 @@ class SocialSignInSignOut(CreateAPIView):
             # authenticate the current user
             # social pipeline associate by email handles already associated exception
             authenticated_user = backend.do_auth(access_token, user=user)
-            
+
         except HTTPError as error:
             # catch any error as a result of the authentication
             return Response({
@@ -494,4 +392,3 @@ class SocialSignInSignOut(CreateAPIView):
         else:
             return Response({"errors": "Could not authenticate"},
                             status=status.HTTP_400_BAD_REQUEST)
-

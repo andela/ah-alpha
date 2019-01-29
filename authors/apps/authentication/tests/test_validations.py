@@ -7,6 +7,7 @@ from rest_framework.views import status
 
 from authors.apps.authentication.validations import UserValidation
 
+
 class ValidationTest(APITestCase):
     """
         Email verification test holder
@@ -18,7 +19,7 @@ class ValidationTest(APITestCase):
         """
         self.email = "diana.kerubo@gmail.com"
         self.username = "Diana254"
-        self.password = "@Diana254"    
+        self.password = "@Diana254"
 
     def test_valid_email(self):
         """
@@ -30,10 +31,12 @@ class ValidationTest(APITestCase):
         """
             Test a valid username
         """
-        self.assertEqual(UserValidation().valid_username(username=self.username), True)
+        self.assertEqual(UserValidation().valid_username(
+            username=self.username), True)
 
     def test_valid_password(self):
         """
             Test a valid password
         """
-        self.assertEqual(UserValidation().valid_password(password=self.password), True)
+        self.assertEqual(UserValidation().valid_password(
+            password=self.password), True)

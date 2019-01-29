@@ -6,6 +6,8 @@ from rest_framework.views import status
 from authors.apps.articles.models import Article
 from authors.apps.authentication.backends import JWTokens
 from authors.apps.authentication.models import User
+from authors.apps.profiles.models import Profile
+from authors.apps.comments.models import Comments
 
 
 class LikeDislikeTest(APITestCase):
@@ -22,8 +24,6 @@ class LikeDislikeTest(APITestCase):
         """
 
         self.client = APIClient()
-        self.dislike_url = reverse(
-            "likes:article_dislike", kwargs={"slug": "riick"})
         self.username = "dann"
         self.email = "dann@dan.com"
         self.password = "Qwertyuiop1"
@@ -38,7 +38,19 @@ class LikeDislikeTest(APITestCase):
             slug="riick",
             author_id=self.user.id
         )
-        self.like_url = reverse("likes:article_like", kwargs={"slug": "riick"})
+        self.like_url = reverse("likes:article_like", kwargs={
+                                "slug": self.article.slug})
+        self.dislike_url = reverse(
+            "likes:article_dislike", kwargs={"slug": self.article.slug})
+        self.comment = Comments.objects.create(
+            author_profile=self.user.profile,
+            article=self.article,
+            body="My first comment"
+        )
+        self.comment_like_url = reverse("likes:comment_like", kwargs={
+            "slug": self.article.slug, "pk": self.comment.id})
+        self.comment_dislike_url = reverse("likes:comment_dislike", kwargs={
+            "slug": self.article.slug, "pk": self.comment.id})
 
     def test_like_article(self):
         """Test liking an article"""
@@ -64,7 +76,8 @@ class LikeDislikeTest(APITestCase):
         """
         Tests undoing a like.
 
-        If another like request is sent to an already liked article, it should undo the like.
+        If another like request is sent to an already liked article,
+        it should undo the like.
         """
 
         self.client.post(
@@ -81,7 +94,8 @@ class LikeDislikeTest(APITestCase):
         """
         Tests undoing a dislike
 
-        If another dislike request is sent to an already liked article, it should undo the previous dislike.
+        If another dislike request is sent to an already liked article,
+        it should undo the previous dislike.
         """
         self.client.post(
             self.dislike_url, content_type='application/json',
@@ -100,6 +114,70 @@ class LikeDislikeTest(APITestCase):
         """
         response = self.client.post(
             self.like_url, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.data['detail'],
+                         'Authentication credentials were not provided.')
+
+    def test_like_comment(self):
+        """Test liking an article"""
+
+        response = self.client.post(
+            self.comment_like_url, content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer ' + self.token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['result'], success['Like'])
+        self.assertEqual(response.data['status'], statusmessage['Like'])
+
+    def test_dislike_comment(self):
+        """Test disliking an article"""
+
+        response = self.client.post(
+            self.comment_dislike_url, content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer ' + self.token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['result'], success['Dislike'])
+        self.assertEqual(response.data['status'], statusmessage['Dislike'])
+
+    def test_un_like_comment(self):
+        """
+        Tests undoing a like.
+
+        If another like request is sent to an already liked article, it should undo the like.
+        """
+
+        self.client.post(
+            self.comment_like_url, content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer ' + self.token)
+        response = self.client.post(
+            self.comment_like_url, content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer ' + self.token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['result'], success['Null'])
+        self.assertEqual(response.data['status'], statusmessage['Null'])
+
+    def test_un_dislike_comment(self):
+        """
+        Tests undoing a dislike
+
+        If another dislike request is sent to an already liked article, it should undo the previous dislike.
+        """
+        self.client.post(
+            self.comment_dislike_url, content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer ' + self.token)
+        response = self.client.post(
+            self.comment_dislike_url, content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer ' + self.token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['result'], success['Null'])
+        self.assertEqual(response.data['status'], statusmessage['Null'])
+
+    def test_unauthenticated_like_comment(self):
+        """
+        Try liking without authentication
+
+        """
+        response = self.client.post(
+            self.comment_like_url, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(
             response.data['detail'], 'Authentication credentials were not provided.')

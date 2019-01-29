@@ -44,7 +44,7 @@ class UserRegistrationTest(APITestCase):
         # Data lacking with no email
         self.none_field_credentials_2 = {
             "user": {
-                "username":"isasnack",
+                "username": "isasnack",
                 "password": "@Wachira254"
             }
         }

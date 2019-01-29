@@ -52,10 +52,11 @@ INSTALLED_APPS = [
     'taggit',
     'cloudinary',
 
-    'authors.apps.like_dislike',
     'authors.apps.authentication',
     'authors.apps.articles',
     'authors.apps.rating',
+
+    'authors.apps.like_dislike',
     'authors.apps.core',
     'authors.apps.comments',
     'authors.apps.profiles',
