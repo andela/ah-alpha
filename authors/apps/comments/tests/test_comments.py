@@ -7,7 +7,7 @@ from authors.apps.authentication.backends import JWTokens
 from authors.apps.authentication.messages import error_msg, success_msg
 
 
-from .base_tests import TestBaseCase  
+from .base_tests import TestBaseCase
 from rest_framework import status
 
 
@@ -16,16 +16,25 @@ class CommentsTests(TestBaseCase):
     Comments test cases
     """
 
+    def forbidden_403(self, response):
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def ok_200(self, response):
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def created_201(self, response):
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_can_create_comment(self):
         """
         Test if authenticated users can create comments
         """
-        
+
         token = self.login_user()
         slug = self.create_article()
 
         response = self.client.post(
-            reverse('comments:comment', kwargs={'slug':slug}),
+            reverse('comments:comment', kwargs={'slug': slug}),
             self.comment,
             HTTP_AUTHORIZATION="Bearer " + token,
             format='json',
@@ -36,11 +45,11 @@ class CommentsTests(TestBaseCase):
         """
         Test if unauthenticated users can create comments
         """
-        
+
         slug = self.create_article()
 
         response = self.client.post(
-            reverse('comments:comment', kwargs={'slug':slug}),
+            reverse('comments:comment', kwargs={'slug': slug}),
             self.comment,
             format='json',
         )
@@ -54,23 +63,23 @@ class CommentsTests(TestBaseCase):
         slug = self.create_article()
 
         response = self.client.get(
-            reverse('comments:comment', kwargs={'slug':slug}),
+            reverse('comments:comment', kwargs={'slug': slug}),
             self.comment,
             HTTP_AUTHORIZATION="Bearer " + token,
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         return response
-    
+
     def test_get_specific_comment(self):
         """
         Test if authenticated users can create comments
         """
-        
+
         token = self.login_user()
         slug = self.create_article()
         response = self.client.post(
-            reverse('comments:comment', kwargs={'slug':slug}),
+            reverse('comments:comment', kwargs={'slug': slug}),
             self.comment,
             HTTP_AUTHORIZATION="Bearer " + token,
             format='json',
@@ -78,7 +87,7 @@ class CommentsTests(TestBaseCase):
         comment_id = response.data.get('id')
         response = self.client.get(
             reverse('comments:specific_comment',
-                      kwargs={"slug": slug, "id": comment_id}),
+                    kwargs={"slug": slug, "id": comment_id}),
             self.comment,
             HTTP_AUTHORIZATION="Bearer " + token,
             format='json',
@@ -89,11 +98,11 @@ class CommentsTests(TestBaseCase):
         """
         Test if authenticated users can create comments
         """
-        
+
         token = self.login_user()
         slug = self.create_article()
         response = self.client.post(
-            reverse('comments:comment', kwargs={'slug':slug}),
+            reverse('comments:comment', kwargs={'slug': slug}),
             self.comment,
             HTTP_AUTHORIZATION="Bearer " + token,
             format='json',
@@ -101,23 +110,22 @@ class CommentsTests(TestBaseCase):
         comment_id = response.data.get('id')
         response = self.client.put(
             reverse('comments:specific_comment',
-                      kwargs={"slug": slug, "id": comment_id}),
+                    kwargs={"slug": slug, "id": comment_id}),
             self.update_comment,
             HTTP_AUTHORIZATION="Bearer " + token,
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-
     def test_delete_comment(self):
         """
         Test if authenticated users can create comments
         """
-        
+
         token = self.login_user()
         slug = self.create_article()
         response = self.client.post(
-            reverse('comments:comment', kwargs={'slug':slug}),
+            reverse('comments:comment', kwargs={'slug': slug}),
             self.comment,
             HTTP_AUTHORIZATION="Bearer " + token,
             format='json',
@@ -125,7 +133,7 @@ class CommentsTests(TestBaseCase):
         comment_id = response.data.get('id')
         response = self.client.delete(
             reverse('comments:specific_comment',
-                      kwargs={"slug": slug, "id": comment_id}),
+                    kwargs={"slug": slug, "id": comment_id}),
             HTTP_AUTHORIZATION="Bearer " + token,
             format='json',
         )

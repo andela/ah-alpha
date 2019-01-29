@@ -6,7 +6,6 @@ from .models import LikeDislike
 class PreferenceSerializer(serializers.ModelSerializer):
     """Serializers"""
 
-
     class Meta:
         model = LikeDislike
         fields = '__all__'

@@ -1,4 +1,5 @@
 import re
+
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
@@ -27,29 +28,12 @@ class RegistrationSerializer(serializers.ModelSerializer):
         # or response, including fields specified explicitly above.
         fields = ['email', 'username', 'password', 'token']
 
-    def validate_username(self, value):
-        """
-        get the value of the username and check for validation
-        """
-        username = value
-        if(UserValidation.valid_username(self, username=username)):
-            return value
-
-    def validate_email(self, value):
-        """
-        get the value of the email and check for validation during registration
-        """
-        email = value
-        if(UserValidation.valid_email(self, email=email)):
-            return value
-
-    def validate_password(self, value):
-        """
-        get the value of password and check for validation during registration
-        """
-        password = value
-        if(UserValidation.valid_password(self, password=password)):
-            return value
+    def validate(self, data):
+        """Validates the data"""
+        UserValidation.valid_username(self, data['username'])
+        UserValidation.valid_email(self, data['email'])
+        UserValidation.valid_password(self, data['password'])
+        return data
 
     def create(self, validated_data):
         # Use the `create_user` method we wrote earlier to create a new user.
@@ -128,9 +112,8 @@ class LoginSerializer(serializers.Serializer):
         """
         get email and check validation
         """
-        email = value
-        if(UserValidation.valid_login_email(self, email=email)):
-            return value
+        UserValidation.valid_login_email(self, value)
+        return value
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -193,14 +176,15 @@ class ResetPasswordSerializer(serializers.Serializer):
     class Meta:
         model = User
         fields = ['email']
+
+
 class SocialSignInSignOutSerializer(serializers.Serializer):
     """
     This class Jsonifies and validates token 
     from social providers
     """
-    provider=serializers.CharField(max_length=255, required=True)
+    provider = serializers.CharField(max_length=255, required=True)
     access_token = serializers.CharField(
         max_length=1024, required=True, trim_whitespace=True)
     access_token_secret = serializers.CharField(
         max_length=300, allow_null=True, default=None, trim_whitespace=True)
-

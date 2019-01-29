@@ -7,11 +7,17 @@ from .messages import error_msg
 from .models import User
 
 
-class UserValidation():
+class UserValidation(object):
     """
     This is to validate user input on registration and login and return
     descriptive validation error messages
     """
+
+    def re_search(self, data, errors):
+        for key, val in errors.items():
+            if re.search(key, data) is None:
+                raise ValidationError(error_msg[val])
+        return True
 
     def valid_email(self, email=None):
         """
@@ -28,29 +34,31 @@ class UserValidation():
         """
         Function to validate the username on registration
         """
+
+        errors = {
+            '[A-Za-z]': 'no_letter',
+            '[A-Za-z]|[0-9]': 'special_character',
+        }
         user_qs = User.objects.filter(username=username)
         if user_qs.exists():
             raise ValidationError(error_msg['usedname'])
         elif len(username) < 3:
             raise ValidationError(error_msg['shortname'])
-        elif re.search('[A-Za-z]', username) is None:
-            raise ValidationError(error_msg['no_letter'])
-        elif re.match('[A-Za-z]|[0-9]', username) is None:
-            raise ValidationError(error_msg['special_character'])
+        UserValidation.re_search(self, username, errors)
         return True
 
     def valid_password(self, password=None):
         """
         Function to validate the user password on registration
         """
+        errors = {
+            '[0-9]': 'number_in_pwd',
+            '[a-z]': 'letter_in_pwd',
+            '[A-Z]': 'caps_in_pwd'
+        }
         if len(password) < 8:
             raise ValidationError(error_msg['short_pwd'])
-        elif re.search('[0-9]',password) is None:
-            raise ValidationError(error_msg['number_in_pwd'])
-        elif re.search('[a-z]', password) is None:
-            raise ValidationError(error_msg['letter_in_pwd'])
-        elif re.search('[A-Z]', password) is None:
-            raise ValidationError(error_msg['caps_in_pwd'])
+        UserValidation.re_search(self, password, errors)
         return True
 
     def valid_login_email(self, email=None):

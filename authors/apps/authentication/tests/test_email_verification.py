@@ -5,10 +5,12 @@ from django.core import mail
 from rest_framework.test import APIClient, APITestCase
 from rest_framework.views import status
 
+
 class EmailVerificationTest(APITestCase):
     """
         Email verification test holder
     """
+
     def setUp(self):
         """
             setup method
@@ -17,24 +19,23 @@ class EmailVerificationTest(APITestCase):
         self.registration_url = reverse('auth:register')
         self.login_url = reverse("auth:login")
         self.registration_data = {
-            "user":{
-                "username":"test",
-                "email":"test@gmail.com",
-                "password":"@Test254"
+            "user": {
+                "username": "test",
+                "email": "test@gmail.com",
+                "password": "@Test254"
             }
         }
         self.login_data = {
-            "user":{
-                "email":"test@gmail.com",
-                "password":"@Test254"
+            "user": {
+                "email": "test@gmail.com",
+                "password": "@Test254"
             }
         }
 
     def test_email_verification(self):
         """Test email verification"""
         mail.send_mail(
-            'Account verification'
-            , 'Here is the message.',
+            'Account verification', 'Here is the message.',
             os.getenv("EMAIL_HOST_USER"), ['test@gmail.com'],
             fail_silently=False
         )

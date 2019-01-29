@@ -27,10 +27,14 @@ class CreateCommentAPiView(generics.ListCreateAPIView):
         slug = self.kwargs['slug']
         article = self.util.check_article(slug)
         comment = request.data['comment']
-        serializer = self.serializer_class(data=comment)
+        serializer = self.serializer_class(data=comment, context={
+            'request': request
+        })
         author_profile = Profile.objects.get(user=request.user)
         serializer.is_valid()
-        serializer.save(author_profile=author_profile, article_id=article.id)
+        serializer.save(author_profile=author_profile,
+                        article_id=article.id,
+                        )
         result = {"message": success_msg["added_comment"]}
         result.update(serializer.data)
         return Response(result,
@@ -41,31 +45,32 @@ class CreateCommentAPiView(generics.ListCreateAPIView):
         slug = self.kwargs['slug']
         article = self.util.check_article(slug)
         comments = self.queryset.filter(article_id=article.id)
-        serializer = self.serializer_class(comments, many=True)
+        serializer = self.serializer_class(
+            comments,
+            context={
+                'request': request
+            },
+            many=True)
         return Response({"comments": serializer.data,
-                         "commentsCount": comments.count()
-                         }, status=status.HTTP_200_OK)
+                         "commentsCount": comments.count()})
 
 
 class CommentApiView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    View class to fetch, modify and delete a comment
-    """
     permission_classes = (IsAuthenticated,)
     serializer_class = CommentSerializer
     util = Utils()
     queryset = Comments.objects.all()
 
-    def get(self, request, id, *args, **kwargs):
+    def retrieve(self, request, id, *args, **kwargs):
         '''This method gets a single comment by id'''
 
         slug = self.kwargs['slug']
         article = self.util.check_article(slug)
         comment = self.util.check_comment(id)
-        serializer = self.serializer_class(comment)
-        return Response({
-            "comment": serializer.data
-        }, status=status.HTTP_200_OK)
+        serializer = self.serializer_class(comment, context={
+            'request': request
+        })
+        return Response({"comment": serializer.data})
 
     def delete(self, request, id, *args, **kwargs):
         '''This method deletes a comment'''
@@ -97,8 +102,10 @@ class CommentApiView(generics.RetrieveUpdateDestroyAPIView):
             existing_field = request.data.copy()
             comment.body = existing_field['comment']['body']
 
-            serializer = CommentSerializer(instance=comment,
-                                           data=existing_field['comment'])
+            serializer = CommentSerializer(
+                instance=comment, data=existing_field['comment'], context={
+                    'request': request
+                })
             if serializer.is_valid():
                 serializer.save(author_profile=comment.author_profile)
                 msg = success_msg["update_success"]

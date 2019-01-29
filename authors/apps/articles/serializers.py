@@ -65,13 +65,9 @@ class ArticleSerializer(serializers.ModelSerializer):
             item = LikeDislike.objects.get(
                 content_type=content_type, object_id=obj.id, user=user)
             return statusmessage['Like'] if item.pref == 1 else statusmessage['Dislike']
-
         except Exception as e:
             if e.__class__.__name__ == "DoesNotExist":
                 return statusmessage['Null']
-
-        slug = unique_slug
-        return slug
 
     def get_rating(self, obj):
         """

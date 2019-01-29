@@ -1,30 +1,39 @@
-import os
-import django
-import json
-import random
 import datetime as dt
-
-from rest_framework import status, exceptions
-from rest_framework import generics
-from rest_framework.permissions import AllowAny, IsAuthenticated
+import json
+import os
+import random
 from datetime import datetime, timedelta
-from rest_framework.views import Response
-from django.shortcuts import get_object_or_404
 
-from .renderers import ArticleJSONRenderer
-from .models import Article
-from .serializers import ArticleSerializer
+import django
+from django.shortcuts import get_object_or_404
+from django.template.defaultfilters import slugify
+
+from authors.apps.authentication.utils import status_codes, swagger_body
+from drf_yasg import openapi
+from drf_yasg.inspectors import SwaggerAutoSchema
+from drf_yasg.utils import swagger_auto_schema, swagger_serializer_method
+from rest_framework import exceptions, generics, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.views import Response
+
 from .messages import error_msgs, success_msg
+from .models import Article
+from .renderers import ArticleJSONRenderer
+from .serializers import ArticleSerializer
 
 
 class ArticleAPIView(generics.ListCreateAPIView):
     """
         Article endpoints
     """
-    renderer_classes = (ArticleJSONRenderer,)
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
 
+    @swagger_auto_schema(
+        request_body=swagger_body(prefix="article", fields=(
+            'image_path', 'title', 'body')),
+        responses=status_codes(codes=(201, 400))
+    )
     def post(self, request):
         """
             POST /api/v1/articles/
@@ -32,7 +41,6 @@ class ArticleAPIView(generics.ListCreateAPIView):
         permission_classes = (IsAuthenticated,)
         context = {"request": request}
         article = request.data.copy()
-
         article['slug'] = ArticleSerializer(
         ).create_slug(request.data['title'])
         serializer = self.serializer_class(data=article, context=context)
@@ -126,8 +134,10 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
             article.description = article_data['description']
             article.body = article_data['body']
             serializer = ArticleSerializer(
-                instance=article, data=article_data,
-                context={'request': request}, partial=True
+                instance=article,
+                data=article_data,
+                context={'request': request},
+                partial=True
             )
             if serializer.is_valid():
                 serializer.save(author=request.user)

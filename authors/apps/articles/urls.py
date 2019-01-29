@@ -6,5 +6,6 @@ app_name = "articles"
 
 urlpatterns = [
     path('articles/', ArticleAPIView.as_view(), name="articles"),
-    path('articles/<str:slug>/', SpecificArticle.as_view(), name="specific_article")
+    path('articles/<str:slug>/', SpecificArticle.as_view(),
+         name="specific_article")
 ]
