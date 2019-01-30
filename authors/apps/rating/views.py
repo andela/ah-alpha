@@ -79,6 +79,7 @@ class RatingAPIView(GenericAPIView):
         """
         article = self.get_article(slug)
         rating = None
+
         # check if article exists
         if not article:
             raise ValidationError(
@@ -95,6 +96,9 @@ class RatingAPIView(GenericAPIView):
                 article=article).aggregate(Avg('your_rating'))
 
             average = avg['your_rating__avg']
+            count = Rating.objects.filter(
+                article=article.id).count()
+
             if avg['your_rating__avg'] is None:
                 average = 0
 
@@ -102,12 +106,14 @@ class RatingAPIView(GenericAPIView):
                 return Response({
                     'article': article.slug,
                     'average_rating': average,
+                    'rate_count': count,
                     'your_rating': error_msg['rating_not_found']
                 }, status=status.HTTP_200_OK)
             else:
                 return Response({
                     'article': article.slug,
                     'average_rating': average,
+                    'rate_count': count,
                     'your_rating': error_msg['no_login']
                 }, status=status.HTTP_200_OK)
 

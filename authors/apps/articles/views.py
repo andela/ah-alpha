@@ -16,14 +16,16 @@ from rest_framework import exceptions, generics, status
 from rest_framework import status, exceptions
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
-from datetime import datetime, timedelta
 from rest_framework.views import Response
 
 from .renderers import ArticleJSONRenderer
-from .models import Article, Tags
+from .models import Article, Tags, User
 from .serializers import ArticleSerializer, TagSerializers
 from .messages import error_msgs, success_msg
 from authors.apps.core.pagination import PaginateContent
+from django.template.loader import render_to_string
+from django.core.mail import send_mail
+import re
 
 
 class ArticleAPIView(generics.ListCreateAPIView):
@@ -80,7 +82,7 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
         Specific article endpoint class
     """
     serializer_class = ArticleSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     renderer_classes = (ArticleJSONRenderer,)
 
     def get(self, request, slug, *args, **kwargs):
@@ -175,3 +177,106 @@ class TagAPIView(generics.ListAPIView):
             'message': error_msgs['tags_not_found'],
         }, status=status.HTTP_404_NOT_FOUND)
 
+
+def get_article(slug):
+    """
+        Returns specific article using slug
+    """
+    article = Article.objects.all().filter(slug=slug).first()
+    if article is None:
+        raise exceptions.NotFound({
+            "message": error_msgs['not_found']
+        }, status.HTTP_404_NOT_FOUND)
+    return article
+
+
+class ShareViaEmail(generics.CreateAPIView):
+    """
+        Share Articles via email
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, slug):
+        """
+            POST a request to /api/v1/<slug>/share/email/
+            share the article via email
+        """
+        email = request.data['email']
+        get_article(slug)
+
+        if not email:
+            return Response({
+                'message': error_msgs['no_email'],
+            },
+                status=status.HTTP_400_BAD_REQUEST)
+        elif re.search(r"^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$", email) is None:
+            return Response({
+                'message': error_msgs['email_format']
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        username = request.user
+
+        # format the email
+        host = request.get_host()
+        protocol = request.scheme
+        shared_link = protocol + '://' + host + '/api/v1/articles/' + slug
+        subject = "Authors Haven"
+        article_title = get_article(slug)
+        message = render_to_string(
+            'article_share.html', {
+                'username': str(username).capitalize(),
+                'title': article_title,
+                'link': shared_link
+            })
+        to_email = email
+        from_email = os.getenv("DEFAULT_FROM_EMAIL")
+
+        send_mail(
+            subject,
+            message,
+            from_email, [
+                to_email,
+            ],
+            html_message=message,
+            fail_silently=False)
+
+        message = {
+            'message':
+            success_msg['share_success'],
+            'shared_link': shared_link
+        }
+        return Response(message, status=status.HTTP_200_OK)
+
+
+class ShareViaFacebookAndTwitter(generics.CreateAPIView):
+    """
+        Share Articles via facebook or twitter
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, slug):
+        """
+            Share Article depending on the POST request either
+            /api/v1/<slug>/share/facebook/ or
+            /api/v1/<slug>/share/twitter/
+        """
+        get_article(slug)
+        host = request.get_host()
+        protocol = request.scheme
+        article_link = protocol + '://' + host + '/api/v1/articles/' + slug
+
+        facebook_url = "https://www.facebook.com/sharer/sharer.php?u="
+        twitter_url = "https://twitter.com/home?status="
+        shared_link = None
+        if request.path == '/api/v1/{}/share/facebook/'.format(slug):
+            shared_link = facebook_url + article_link
+
+        elif request.path == '/api/v1/{}/share/twitter/'.format(slug):
+            shared_link = twitter_url + article_link
+
+        message = {
+            'message':
+                success_msg['share_success'],
+                'shared_link': shared_link
+        }
+        return Response(message, status=status.HTTP_200_OK)

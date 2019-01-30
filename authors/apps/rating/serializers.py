@@ -29,6 +29,7 @@ class RatingSerializer(serializers.ModelSerializer):
     )
     article = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
+    rate_count = serializers.SerializerMethodField()
 
     def get_average_rating(self, obj):
         """
@@ -44,6 +45,14 @@ class RatingSerializer(serializers.ModelSerializer):
         """
         return obj.article.slug
 
+    def get_rate_count(self, obj):
+        """
+            Gets article rate count
+        """
+        count = Rating.objects.filter(
+            article=obj.article.id).count()
+        return count
+
     class Meta:
         model = Rating
-        fields = ('article', 'average_rating', 'your_rating')
+        fields = ('article', 'average_rating', 'rate_count', 'your_rating')
