@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView, UpdateAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, UpdateAPIView, RetrieveAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, PermissionDenied
@@ -88,3 +88,75 @@ class UpdateUserProfileView(UpdateAPIView):
             return Response((serializer.data,
                              {"message": success_msg['profil_update']}),
                             status=status.HTTP_200_OK)
+
+class FollowingView(CreateAPIView):
+    """
+    This class enables users to follow and unfollow eachother
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserProfileSerializer
+    renderer_classes = (ProfileJSONRenderer,)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Follows a user
+        """
+        username = kwargs.get('username')
+        profile = Profile.objects.get(user__username=username)
+        current_profile = request.user.profiles
+        
+        #checks if the authenticated user follows the current user
+        if current_profile.user.username == profile.user.username:
+            return Response({"message":error_msg['cannot_followself']}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        current_profile.toggle_follow(profile.user)
+        serializer = self.serializer_class(profile, context={
+            'request': request})
+
+        if (serializer.data['following']):
+            message = success_msg['success_followed']
+        else:
+            message = success_msg['success_unfollowed']
+
+        return Response((serializer.data, 
+                        {"message": message}), 
+                            status=status.HTTP_201_CREATED)
+
+
+class FollowList(ListAPIView):
+    """
+    This class returns the user follow list of the current user
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserProfileSerializer
+    renderer_classes = (ProfileJSONRenderer,)
+
+    def list(self, request, *args, **kwargs):
+        username = kwargs.get('username')
+        profile = Profile.objects.get(user__username=username)
+        queryset = profile.get_following()
+        serializer = self.serializer_class(queryset, many=True,
+                                           context={'request': request})
+        return Response((serializer.data,
+                        {"message": success_msg['user_following']}),
+                            status=status.HTTP_200_OK)
+
+class FollowerList(ListAPIView):
+    """
+    This class returns the user follower list of the current user
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserProfileSerializer
+    renderer_classes = (ProfileJSONRenderer,)
+    queryset = Profile.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        username = kwargs.get('username')
+        profile = Profile.objects.get(user__username=username)
+        queryset = profile.user.followers
+        serializer = self.serializer_class(queryset, many=True,
+                                           context={'request': request})
+        return Response((serializer.data, 
+                        {"message": success_msg['user_followers']}),
+                        status=status.HTTP_200_OK)

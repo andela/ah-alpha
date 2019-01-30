@@ -11,18 +11,28 @@ class UserProfileSerializer(serializers.ModelSerializer):
      helps convert queryset into datatypes so that we can render them as json
 
     """
-    # instaed of returning id it returns the username
+    # Returns the username
     username = serializers.CharField(source='user.username', read_only=True)
     image = serializers.ImageField(default=None)
+    following = serializers.SerializerMethodField()
+
+    def get_following(self, instance):
+        request = self.context.get('request', None)
+        
+        if request is None:
+            return None
+
+        user_to_check = request.user.profiles
+        status = user_to_check.if_following(instance)
+        return status
 
     class Meta:
         model = Profile
 
         fields = ('username', 'image', 'bio', 'location', 'First_name',
-                  'Last_name',
+                  'Last_name', 'following',
                   'company', 'created_at', 'updated_at')
         read_only_fields = ('created_at', 'updated_at', 'username')
-
 
 class UpdateUserProfileSerializer(serializers.ModelSerializer):
 

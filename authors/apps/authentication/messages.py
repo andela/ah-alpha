@@ -18,8 +18,9 @@ error_msg = {
     "email_pwd": "Email address is required to login",
     "profile_not_there": "User profile not found",
     "cannot_update_profile": "No Permission to Edit",
-    "no_slug": "Article with that slug does not exist",
-    "no_comment": "Comment with that ID does not exist"
+    "no_slug":"Article with that slug does not exist",
+    "no_comment":"Comment with that ID does not exist",
+    "cannot_followself":"You cannot follow yourself"
 }
 
 success_msg = {
@@ -53,9 +54,16 @@ success_msg = {
     "no_comment": "Comment with this ID does not exist",
     "restricted": "You are logged out",
     "Unauthorized": "Unauthorized to update this comment",
+    "deleted_comment":"Comment Successfully deleted",
+    "added_comment":"Comment Successfully added",
+    "update_success":"Comment successfully updated",
     "Like": "Great, you've liked this",
     'Dislike': "Okay, you've disliked this",
     'Null': "Undone!",
+    'success_followed':"User Successfully Followed ",
+    'success_unfollowed':"User Successfully Unfollowed ",
+    'user_followers':"Authors Followers ",
+    'user_following':"Authors you are Following"
 }
 
 statusmessage = {
