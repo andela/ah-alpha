@@ -46,7 +46,7 @@ urlpatterns = [
         'swagger',
         cache_timeout=0), name='schema-swagger-ui'),
     path('api/v1/', include('authors.apps.authentication.urls'), name='apiv1'),
-    path('api/v1/', include('authors.apps.profiles.urls'), name='apiv1'),
+    path('api/v1/', include('authors.apps.profiles.urls', namespace='profile'), name='apiv1'),
     path('api/v1/', include('authors.apps.articles.urls')),
     path('api/v1/', include('authors.apps.rating.urls')),
     path('api/v1/', include('authors.apps.comments.urls')),

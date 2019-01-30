@@ -1,9 +1,12 @@
 from django.db import models
 from django.db.models.signals import post_save
 from cloudinary.models import CloudinaryField
+from django.contrib.auth import get_user_model
 
 # local import
 from ..authentication.models import User
+
+User = get_user_model()
 
 
 class Profile(models.Model):
@@ -14,6 +17,7 @@ class Profile(models.Model):
     """
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name='profiles')
+    is_following = models.ManyToManyField(User, related_name='followers', symmetrical=False)
     bio = models.TextField(blank=True)
     image = CloudinaryField(
         "image",
@@ -29,6 +33,29 @@ class Profile(models.Model):
 
     def __str__(self):
         return str(self.user.username)
+    #follows a user
+    def follow(self, profile):
+        self.is_following.add(profile)
+
+    #unfollows a user
+    def unfollow(self, profile):
+        self.is_following.remove(profile)
+
+    def toggle_follow(self, profile):
+        if self.if_following(profile):
+            return self.unfollow(profile)
+        return self.follow(profile)
+
+
+    #append the profile user list to get the user followers
+    def get_following(self, profile=None):
+        users = self.is_following.all()
+        profile_list = [item.profiles for item in users]
+        return profile_list
+        
+    #checks if the user profile is in the is_following list
+    def if_following(self, profile):
+        return self.is_following.filter(pk=profile.pk).exists()
 
 
 def create_profile(sender, instance, created, **kwargs):
