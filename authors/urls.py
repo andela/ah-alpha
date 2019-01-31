@@ -34,6 +34,7 @@ schema_view = get_schema_view(
 
 # urls
 urlpatterns = [
+
     path('admin/', admin.site.urls),
     path('api/v1/', include('authors.apps.like_dislike.urls',
                             namespace='likes')),
@@ -49,5 +50,4 @@ urlpatterns = [
     path('api/v1/', include('authors.apps.articles.urls')),
     path('api/v1/', include('authors.apps.rating.urls')),
     path('api/v1/', include('authors.apps.comments.urls')),
-    path('api/v1/', include('authors.apps.rating.urls')),
 ]

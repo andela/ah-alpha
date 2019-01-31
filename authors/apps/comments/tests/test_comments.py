@@ -29,7 +29,6 @@ class CommentsTests(TestBaseCase):
         """
         Test if authenticated users can create comments
         """
-
         token = self.login_user()
         slug = self.create_article()
 
@@ -69,7 +68,9 @@ class CommentsTests(TestBaseCase):
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        return response
+        self.assertIn('count', response.data)
+        self.assertIn('next', response.data)
+        self.assertIn('previous', response.data)
 
     def test_get_specific_comment(self):
         """

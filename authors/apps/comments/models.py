@@ -19,3 +19,4 @@ class Comments(models.Model):
 
     def __str__(self):
         return str(self.author_profile)
+        
