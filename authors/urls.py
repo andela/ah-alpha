@@ -32,6 +32,7 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
+# urls
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('authors.apps.like_dislike.urls', namespace='likes')),
@@ -46,4 +47,5 @@ urlpatterns = [
     path('api/v1/', include('authors.apps.profiles.urls'), name='apiv1'),
     path('api/v1/', include('authors.apps.articles.urls')),
     path('api/v1/', include('authors.apps.rating.urls')),
+    path('api/v1/', include('authors.apps.comments.urls')),
 ]

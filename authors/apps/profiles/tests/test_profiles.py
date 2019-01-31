@@ -11,7 +11,6 @@ class TestProfile(TestCase):
     Check if profiles functionality is working as expected
 
     """
-
     def setUp(self):
         client = Client()
         self.login_url = reverse("auth:login")
@@ -168,5 +167,4 @@ class TestProfile(TestCase):
             content_type='application/json',
             HTTP_AUTHORIZATION='Token ' + token
         )
-
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

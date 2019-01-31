@@ -17,7 +17,9 @@ error_msg = {
     "require_pwd": "Password is required to login",
     "email_pwd": "Email address is required to login",
     "profile_not_there": "User profile not found",
-    "cannot_update_profile": "No Permission to Edit"
+    "cannot_update_profile": "No Permission to Edit",
+    "no_slug":"Article with that slug does not exist",
+    "no_comment":"Comment with that ID does not exist"
 }
 
 success_msg = {
@@ -27,9 +29,9 @@ success_msg = {
     "email_verify": "Your verification link sent, check your email",
     "profil_update": "Profile  update successful",
     "profil_success": "Request successful",
-    "Like": "Great, you've liked this",
-    'Dislike': "Okay, you've disliked this",
-    'Null': "Undone!",
+    "deleted_comment":"Comment Successfully deleted",
+    "added_comment":"Comment Successfully added",
+    "update_success":"Comment successfully updated"
 }
 
 statusmessage = {

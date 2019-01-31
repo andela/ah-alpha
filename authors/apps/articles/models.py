@@ -4,7 +4,6 @@ from django.conf import settings
 from django.db import models
 from cloudinary.models import CloudinaryField
 from django.template.defaultfilters import slugify
-
 from authors.apps.authentication.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
