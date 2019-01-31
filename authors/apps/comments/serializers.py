@@ -1,5 +1,4 @@
 from django.contrib.contenttypes.models import ContentType
-
 from authors.apps.articles.serializers import ArticleSerializer
 from authors.apps.authentication.messages import statusmessage
 from authors.apps.authentication.serializers import UserSerializer
@@ -7,7 +6,6 @@ from authors.apps.like_dislike.models import LikeDislike
 from authors.apps.like_dislike.serializers import PreferenceSerializer
 from authors.apps.profiles.serializers import UserProfileSerializer
 from rest_framework import serializers
-
 from .models import Comments
 
 

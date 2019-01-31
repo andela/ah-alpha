@@ -99,8 +99,9 @@ class ArticleTestCase(APITestCase):
             format="json"
         )
         self.assertEqual(response.status_code, 200)
-        data = response.data
-        self.assertTrue(len(data) == 0)
+        self.assertIn('count', response.data)
+        self.assertIn('next', response.data)
+        self.assertIn('previous', response.data)
 
     def test_get_one_article(self):
         """

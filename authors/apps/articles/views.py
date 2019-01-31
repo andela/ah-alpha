@@ -23,6 +23,7 @@ from .renderers import ArticleJSONRenderer
 from .models import Article, Tags
 from .serializers import ArticleSerializer, TagSerializers
 from .messages import error_msgs, success_msg
+from authors.apps.core.pagination import PaginateContent
 
 
 class ArticleAPIView(generics.ListCreateAPIView):
@@ -62,16 +63,16 @@ class ArticleAPIView(generics.ListCreateAPIView):
         """
             GET /api/v1/articles/
         """
-        permission_classes = (AllowAny,)
-        queryset = self.get_queryset()
+        perform_pagination = PaginateContent()
+        objs_per_page = perform_pagination.paginate_queryset(self.queryset, request)
         serializer = ArticleSerializer(
-            queryset,
+            objs_per_page,
             context={
                 'request': request
             },
             many=True
         )
-        return Response(serializer.data, status=200)
+        return perform_pagination.get_paginated_response(serializer.data)
 
 
 class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
