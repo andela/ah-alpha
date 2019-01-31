@@ -50,4 +50,5 @@ urlpatterns = [
     path('api/v1/', include('authors.apps.articles.urls')),
     path('api/v1/', include('authors.apps.rating.urls')),
     path('api/v1/', include('authors.apps.comments.urls')),
+     path('api/v1/', include('authors.apps.reading_stats.urls'))
 ]

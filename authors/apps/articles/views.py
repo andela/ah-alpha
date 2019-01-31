@@ -25,6 +25,8 @@ from .serializers import ArticleSerializer, TagSerializers
 from .messages import error_msgs, success_msg
 from authors.apps.core.pagination import PaginateContent
 
+from authors.apps.reading_stats.models import ReadStats
+
 
 class ArticleAPIView(generics.ListCreateAPIView):
     """
@@ -93,6 +95,17 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
             raise exceptions.NotFound({
                 "message": error_msgs['not_found']
             })
+        #this checks if an istance of read exists 
+        #if it doesn't then it creates a new one
+        if request.user.id:
+            if not ReadStats.objects.filter(user=request.user, article=article).exists():
+                user_stat = ReadStats(
+                    user = request.user,
+                    article = article
+                )
+                user_stat.article_read = True
+                user_stat.save()
+
         serializer = ArticleSerializer(
             article,
             context={
