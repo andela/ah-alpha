@@ -71,3 +71,9 @@ statusmessage = {
     'Dislike': "Disliked",
     'Null': "Null",
 }
+
+read_stats_message = {
+    "read_status":"Article has been read",
+    "read_update":"You have already read this article",
+    "read_error":"Article doesnot exist check details again"
+}

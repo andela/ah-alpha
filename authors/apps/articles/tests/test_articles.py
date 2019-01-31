@@ -4,6 +4,7 @@ from django.template.defaultfilters import slugify
 
 from ..models import Article
 from ...authentication.models import User
+from authors.apps.authentication.messages import read_stats_message
 
 
 class ArticleTestCase(APITestCase):
@@ -19,6 +20,7 @@ class ArticleTestCase(APITestCase):
         self.all_article_url = reverse("articles:articles")
         self.login_url = reverse("auth:login")
         self.register = reverse("auth:register")
+        self.read_stats = reverse("read:user_read_stats")
         self.client = APIClient()
         self.valid_article_data = {
             "article": {
@@ -77,6 +79,13 @@ class ArticleTestCase(APITestCase):
         )
         return specific_article_url
 
+    def get_slug(self, title):
+        """
+            Get slug
+        """
+        slug = slugify(title)
+        return slug
+
     def create_article(self, data):
         """
             Create an article
@@ -118,22 +127,55 @@ class ArticleTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-    
-    def test_read_time(self):
+    def test_get_stat(self):
         """
             Test GET /api/v1/article/<slug>/
         """
         token = self.login(self.user_data)
         self.create_article(self.valid_article_data['article'])
-        url = self.get_slug_from_title(
-        self.valid_article_data['article']['title'])
         response = self.client.get(
-                url,
-                format="json",
-                HTTP_AUTHORIZATION="Bearer {}".format(token)
-            )
+            self.read_stats,
+            content_type='application/json',
+            HTTP_AUTHORIZATION="Bearer {}".format(token)
+        )
         self.assertEqual(response.status_code, 200)
-        self.assertIn(response.data['read_time'],'0:01:00')
+
+    def test_read(self):
+        """
+            Test reading an article that doesnot exist
+        """
+        token = self.login(self.user_data)
+        self.create_article(self.valid_article_data['article'])
+        slug = "its-a-test-article"
+        response = self.client.get(
+            reverse("read:article_read", kwargs={
+            "slug":slug
+        }),
+            content_type='application/json',
+            HTTP_AUTHORIZATION="Bearer {}".format(token)
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertIn(response.data['message'],
+                      read_stats_message['read_error'])
+
+    def test_read_new(self):
+        """
+            
+        """
+        token = self.login(self.user_data)
+        self.create_article(self.valid_article_data['article'])
+        slug = self.get_slug(self.valid_article_data['article']['title'])
+        response = self.client.get(
+            reverse("read:article_read", kwargs={
+            "slug":slug
+        }),
+            content_type='application/json',
+            HTTP_AUTHORIZATION="Bearer {}".format(token)
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertIn(response.data['message'],
+                      read_stats_message['read_error'])
+
 
     def test_remove_one_article(self):
         """

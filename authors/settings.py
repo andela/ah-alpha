@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'authors.apps.core',
     'authors.apps.comments',
     'authors.apps.profiles',
+    'authors.apps.reading_stats',
     'rest_framework_swagger',
     # credits --> https://github.com/axnsan12/drf-yasg
     'drf_yasg',
