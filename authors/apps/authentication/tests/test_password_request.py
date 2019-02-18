@@ -21,6 +21,7 @@ class TestResetPassword(TestCase):
             }
         }
         self.user_email = [
+            
             {
                 "email": ""
                 },

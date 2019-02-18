@@ -24,8 +24,7 @@ from rest_framework.response import Response
 from rest_framework.schemas import ManualSchema
 from rest_framework.views import APIView, status
 from social_core.backends.oauth import BaseOAuth1, BaseOAuth2
-from social_core.exceptions import (AuthForbidden, AuthTokenError,
-                                    MissingBackend)
+from social_core.exceptions import AuthForbidden, AuthTokenError, MissingBackend
 from social_django.utils import load_backend, load_strategy
 
 from .backends import GetAuthentication, JWTokens
@@ -37,13 +36,6 @@ from .serializers import (LoginSerializer, RegistrationSerializer,
                           SocialSignInSignOutSerializer, UserSerializer)
 from .utils import status_codes, swagger_body
 from .validations import UserValidation
-
-from .messages import error_msg, success_msg
-from social_django.utils import load_backend, load_strategy
-from social_core.exceptions import (MissingBackend, AuthTokenError,
-                                    AuthForbidden)
-from django.db import IntegrityError
-from social_core.backends.oauth import BaseOAuth1, BaseOAuth2
 
 
 class RegistrationAPIView(GenericAPIView):
@@ -71,6 +63,7 @@ class RegistrationAPIView(GenericAPIView):
             POST /users/
         """
         user = request.data.get('user', {})
+        url = request.data.get('site')
         serializer = self.serializer_class(data=user)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -79,9 +72,11 @@ class RegistrationAPIView(GenericAPIView):
                            algorithm='HS256').decode()
         from_mail, to_mail = os.getenv(
             "DEFAULT_FROM_EMAIL"), serializer.data.get("email")
-        site_url = "http://"+get_current_site(request).domain
         subject = "Account Verification"
-        link_url = site_url+"/api/v1/users/verify/{}".format(token)
+        site_url = "http://"+get_current_site(request).domain
+        email_url = url if url else site_url
+        link_url = email_url + "/verify/{}".format(token)
+        print(link_url)
         html_page = render_to_string(
             "email_verification.html",
             context={"link": link_url,
@@ -172,9 +167,12 @@ class VerifyAPIView(GenericAPIView):
         if user:
             user.is_confirmed = True
             user.save()
-
+            token = JWTokens.create_token(self, user)
             return Response({
-                "message": "Email Successfully Confirmed"
+                "message": "Email Successfully Confirmed",
+                'email': user.email,
+                'username': user.username,
+                'token': token
             }, status=status.HTTP_200_OK
             )
         else:
@@ -198,7 +196,7 @@ class PasswordResetRequestAPIView(GenericAPIView):
     def post(self, request):
         user_data = request.data
         email = user_data['email']
-
+        request_site = request.data.get("site")
         # confirms if an eamil has been provided
         # if email is not given then an error message is thrown
         if not email.strip():
@@ -231,9 +229,14 @@ class PasswordResetRequestAPIView(GenericAPIView):
             host = request.get_host()
             protocol = request.scheme
             base_url = '/api/v1/users/password_reset/'
-            reset_link = protocol + '://' + host + base_url + token
+            reset_link = ""
+            if request_site:
+                reset_link = request_site + "/reset-password/" + token
+            else:
+                reset_link = protocol + '://' + host + base_url + token
+            print(reset_link)
             subject = "Password Reset for Authors Haven Web Portal account"
-            message = render_to_string(
+            message = render_to_string( 
                 'request_password_reset.html', {
                     'email': email,
                     'token': token,
@@ -279,7 +282,7 @@ class ResetPasswordAPIView(UpdateAPIView):
         # use the email to find decode the user instance
         user = User.objects.get(email=decoded['email'])
         # get the password that the user is keying in
-        password = request.data['user']['password']
+        password = request.data['password']
         # now we validate the password
         UserValidation.valid_password(self, password)
         # save the password after we have validated it

@@ -1,12 +1,14 @@
 from django.urls import path
 
-from .views import (ArticleAPIView, SpecificArticle, TagAPIView, ShareViaEmail,
-                    ShareViaFacebookAndTwitter)
+from .views import (ArticleAPIView, SearchView, ShareViaEmail,
+                    ShareViaFacebookAndTwitter, SpecificArticle, TagAPIView)
 
 app_name = "articles"
 
 urlpatterns = [
     path('articles/', ArticleAPIView.as_view(), name="articles"),
+    path('tags/', TagAPIView.as_view(), name="tags"),
+    path('articles', SearchView.as_view(), name="search-articles"),
     path('articles/<str:slug>/', SpecificArticle.as_view(),
          name="specific_article"),
     path('tags/', TagAPIView.as_view(), name="tags"),
