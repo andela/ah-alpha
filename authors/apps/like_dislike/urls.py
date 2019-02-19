@@ -1,9 +1,11 @@
-from django.urls import path
 from django.contrib import admin
-from . import views
-from .models import LikeDislike
+from django.urls import path
+
 from authors.apps.articles.models import Article
 from authors.apps.comments.models import Comments
+
+from . import views
+from .models import LikeDislike
 
 app_name = "like"
 
