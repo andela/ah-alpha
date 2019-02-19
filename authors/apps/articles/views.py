@@ -2,32 +2,33 @@ import datetime as dt
 import json
 import os
 import random
+import re
 from datetime import datetime, timedelta
 
 import django
+from django.core.mail import send_mail
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import slugify
+from django.template.loader import render_to_string
 
 from authors.apps.authentication.utils import status_codes, swagger_body
+from authors.apps.core.pagination import PaginateContent
+from authors.apps.reading_stats.models import ReadStats
 from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema
 from drf_yasg.utils import swagger_auto_schema, swagger_serializer_method
 from rest_framework import exceptions, generics, status
-from rest_framework import status, exceptions
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.views import Response
 
-from .renderers import ArticleJSONRenderer
-from .models import Article, Tags, User
-from .serializers import ArticleSerializer, TagSerializers
+from .filters import ArticleFilter
 from .messages import error_msgs, success_msg
-from authors.apps.core.pagination import PaginateContent
-from django.template.loader import render_to_string
-from django.core.mail import send_mail
-import re
-
-from authors.apps.reading_stats.models import ReadStats
+from .models import Article, Tags, User
+from .renderers import ArticleJSONRenderer
+from .serializers import ArticleSerializer, TagSerializers
 
 
 class ArticleAPIView(generics.ListCreateAPIView):
@@ -68,7 +69,8 @@ class ArticleAPIView(generics.ListCreateAPIView):
             GET /api/v1/articles/
         """
         perform_pagination = PaginateContent()
-        objs_per_page = perform_pagination.paginate_queryset(self.queryset, request)
+        objs_per_page = perform_pagination.paginate_queryset(
+            self.queryset, request)
         serializer = ArticleSerializer(
             objs_per_page,
             context={
@@ -84,8 +86,7 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
         Specific article endpoint class
     """
     serializer_class = ArticleSerializer
-    permission_classes = (AllowAny,)
-    renderer_classes = (ArticleJSONRenderer,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, slug, *args, **kwargs):
         """
@@ -97,13 +98,13 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
             raise exceptions.NotFound({
                 "message": error_msgs['not_found']
             })
-        #this checks if an istance of read exists 
-        #if it doesn't then it creates a new one
+        # this checks if an istance of read exists
+        # if it doesn't then it creates a new one
         if request.user.id:
             if not ReadStats.objects.filter(user=request.user, article=article).exists():
                 user_stat = ReadStats(
-                    user = request.user,
-                    article = article
+                    user=request.user,
+                    article=article
                 )
                 user_stat.article_read = True
                 user_stat.save()
@@ -147,6 +148,7 @@ class SpecificArticle(generics.RetrieveUpdateDestroyAPIView):
             }, status=403)
         else:
             article_data = request.data
+            article.updated_at = dt.datetime.utcnow()
             serializer = ArticleSerializer(
                 instance=article,
                 data=article_data,
@@ -293,3 +295,58 @@ class ShareViaFacebookAndTwitter(generics.CreateAPIView):
                 'shared_link': shared_link
         }
         return Response(message, status=status.HTTP_200_OK)
+
+
+class SearchView(generics.ListAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ArticleSerializer
+    filter_class = ArticleFilter
+    filter_backends = (SearchFilter, OrderingFilter,)
+    search_fields = ('title', 'body',
+                     'author__username', 'tags__tag')
+
+    def get_queryset(self, request):
+        """Overrides the get_queryset method"""
+
+        queryset = Article.objects.all()
+        author = self.request.query_params.get('author', None)
+        title = self.request.query_params.get('title', None)
+        body = self.request.query_params.get('body', None)
+        tag = self.request.query_params.get('tag', None)
+
+        if author:
+            queryset = queryset.filter(author__username__icontains=author)
+        if title:
+            queryset = queryset.filter(title__icontains=title)
+        if body:
+            queryset = queryset.filter(body__icontains=body)
+        if tag:
+            queryset = queryset.filter(tags__tag__icontains=tag)
+        if queryset:
+            return queryset
+        else:
+            raise exceptions.NotFound({
+                "message": error_msgs['not_found']
+            })
+
+    def get(self, request):
+        """
+        Handles GET requests. Returns filtered results
+        """
+
+        serializer = self.serializer_class(
+            self.get_queryset(request), context={
+                'request': request
+            }, many=True)
+        results = serializer.data
+        paginator = Paginator(results, 25)
+        page = request.GET.get('page')
+        try:
+            results = paginator.page(page)
+        except PageNotAnInteger:
+             # If page is not an integer, deliver first page.
+            results = paginator.page(1)
+        except EmptyPage:
+             # If page is out of range (e.g. 9999), deliver last page of results.
+            results = paginator.page(paginator.num_pages)
+        return Response(results.object_list)

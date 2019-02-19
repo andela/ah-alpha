@@ -28,8 +28,9 @@ class Article(models.Model):
 
     objects = models.Manager()
 
+
 class Tags(models.Model):
     tag = models.CharField(max_length=120)
 
     def __str__(self):
-            return self.tag
+        return self.tag
