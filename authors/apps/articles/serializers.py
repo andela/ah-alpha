@@ -26,7 +26,7 @@ class ArticleSerializer(serializers.ModelSerializer):
         Article model serializers
     """
     author = RegistrationSerializer(many=False, read_only=True, required=False)
-    image_path = serializers.ImageField(default=None)
+    image_path = serializers.CharField(required=False, default=None)
     title = serializers.CharField(required=True)
     body = serializers.CharField(required=True)
     tags = TagsRelation(many=True, required=False)
