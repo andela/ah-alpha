@@ -9,7 +9,6 @@ from .models import Comments
 from authors.apps.articles.models import Article
 from authors.apps.profiles.models import Profile
 from ..authentication.messages import error_msg, success_msg
-from authors.apps.core.pagination import PaginateContent
 
 
 class CreateCommentAPiView(generics.ListCreateAPIView):
@@ -42,17 +41,17 @@ class CreateCommentAPiView(generics.ListCreateAPIView):
 
     def get(self, request, *args, **kwargs):
         '''This method gets all comments for an article'''
-        paginate_data = PaginateContent()
-        comments_per_article = paginate_data.paginate_queryset(
-            self.queryset, request)
-        serializer = CommentSerializer(
-            comments_per_article,
-            context={
-                'request': request
-            },
-            many=True
-        )
-        return paginate_data.get_paginated_response(serializer.data)
+        slug = self.kwargs['slug']
+        article = self.util.check_article(slug)
+        comments = self.queryset.filter(article_id=article.id)
+        serializer = self.serializer_class(comments, context={'request':request}, many=True)
+        return Response({"comments": serializer.data,
+                         "commentsCount": comments.count()
+                         }, status=status.HTTP_200_OK)
+
+
+
+                         
 
 
 class CommentApiView(generics.RetrieveUpdateDestroyAPIView):

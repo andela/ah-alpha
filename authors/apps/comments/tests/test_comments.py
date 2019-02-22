@@ -68,9 +68,6 @@ class CommentsTests(TestBaseCase):
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('count', response.data)
-        self.assertIn('next', response.data)
-        self.assertIn('previous', response.data)
 
     def test_get_specific_comment(self):
         """
