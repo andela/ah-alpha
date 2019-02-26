@@ -34,6 +34,7 @@ class ArticleSerializer(serializers.ModelSerializer):
     dislike_count = serializers.SerializerMethodField(read_only=True)
     like_status = serializers.SerializerMethodField(read_only=True)
     rating = serializers.SerializerMethodField(read_only=True)
+    my_rating = serializers.SerializerMethodField(read_only=True)
     read_time = serializers.SerializerMethodField()
 
     class Meta:
@@ -54,7 +55,6 @@ class ArticleSerializer(serializers.ModelSerializer):
         read_per_min = math.ceil(count/200.0)
         read_time = str(dt.timedelta(minutes=read_per_min))
         return read_time
-
 
     def create_slug(self, title):
         """
@@ -87,7 +87,7 @@ class ArticleSerializer(serializers.ModelSerializer):
         try:
             item = LikeDislike.objects.get(
                 content_type=content_type, object_id=obj.id, user=user)
-            return statusmessage['Like'] if item.pref == 1 else statusmessage['Dislike']
+            return statusmessage['Like'] if int(item.pref) == 1 else statusmessage['Dislike']
         except Exception as e:
             if e.__class__.__name__ == "DoesNotExist":
                 return statusmessage['Null']
@@ -104,6 +104,19 @@ class ArticleSerializer(serializers.ModelSerializer):
             return average_rating
 
         return average['your_rating__avg']
+
+    def get_my_rating(self, obj):
+        """
+            Get my article rating.
+        """
+        user = self.context['request'].user
+        try:
+            current_rating = Rating.objects.get(
+                user=user, article=obj).your_rating
+            return (current_rating)
+        except Exception as e:
+            if e.__class__.__name__ == "DoesNotExist":
+                return statusmessage['Null']
 
 
 class TagSerializers(serializers.ModelSerializer):
