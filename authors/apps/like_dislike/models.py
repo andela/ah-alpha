@@ -23,10 +23,10 @@ class LikeDislikeManager(models.Manager):
         queryset = self.get_queryset()
         if param == 'likes':
             # return the count of records greater than 0
-            return queryset.filter(pref__gt=0).count()
+            return queryset.filter(pref="1").count()
         elif param == 'dislikes':
             # return the count of records less than 0
-            return queryset.filter(pref__lt=0).count()
+            return queryset.filter(pref="-1").count()
 
 
 class LikeDislike(models.Model):
